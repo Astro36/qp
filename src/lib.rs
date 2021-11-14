@@ -1,27 +1,25 @@
 use parking_lot::Mutex;
 use std::collections::VecDeque;
-use std::error;
-use std::fmt::{self, Debug, Formatter};
 use std::ops::{Deref, DerefMut};
+use std::result::Result as StdResult;
 use std::sync::Arc;
 use std::time::Duration;
-use thiserror::Error;
 use tokio::sync::Semaphore;
 use tokio::time::timeout;
 
-pub trait Resource: Debug + Sized {
-    fn try_new() -> Result<Self, Box<dyn error::Error>>;
+pub mod error;
+
+use error::{Error, Result};
+
+pub trait Resource: Sized {
+    type Error;
+
+    fn try_new() -> StdResult<Self, Self::Error>;
 }
 
 pub struct Pooled<'a, T: Resource> {
     pool: &'a PoolInner<T>,
     resource: Option<T>,
-}
-
-impl<T: Resource> Debug for Pooled<'_, T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self.resource.as_ref().unwrap())
-    }
 }
 
 impl<T: Resource> Deref for Pooled<'_, T> {
@@ -61,14 +59,15 @@ impl<T: Resource> Clone for Pool<T> {
 }
 
 impl<T: Resource> Pool<T> {
-    pub fn try_new(capacity: usize, timeout: Duration) -> Result<Self, Box<dyn error::Error>> {
+    pub fn try_new(capacity: usize, timeout: Duration) -> Result<Self> {
         Ok(Pool {
             inner: Arc::new(PoolInner {
                 capacity,
                 resources: Mutex::new(
                     (0..capacity)
                         .map(|_| Resource::try_new())
-                        .collect::<Result<VecDeque<T>, Box<dyn error::Error>>>()?,
+                        .filter_map(|resource| resource.ok())
+                        .collect::<VecDeque<T>>(),
                 ),
                 semaphore: Semaphore::new(capacity),
                 timeout,
@@ -76,7 +75,7 @@ impl<T: Resource> Pool<T> {
         })
     }
 
-    pub async fn acquire(&self) -> Result<Pooled<'_, T>, AcquireError> {
+    pub async fn acquire(&self) -> Result<Pooled<'_, T>> {
         self.inner.acquire().await
     }
 }
@@ -89,12 +88,12 @@ struct PoolInner<T: Resource> {
 }
 
 impl<T: Resource> PoolInner<T> {
-    pub async fn acquire(&self) -> Result<Pooled<'_, T>, AcquireError> {
+    pub async fn acquire(&self) -> Result<Pooled<'_, T>> {
         // A `Semaphore::acquire` can only fail if the semaphore has been closed.
         let permit = timeout(self.timeout, self.semaphore.acquire())
             .await
-            .map_err(|_| AcquireError::Timeout)?
-            .map_err(|_| AcquireError::Close)?;
+            .map_err(|_| Error::PoolTimedOut)?
+            .map_err(|_| Error::PoolClosed)?;
         permit.forget();
         let mut resources = self.resources.lock();
         /* match resources.pop_front() {
@@ -106,12 +105,4 @@ impl<T: Resource> PoolInner<T> {
             resource: Some(resources.pop_front().unwrap()),
         })
     }
-}
-
-#[derive(Debug, Error)]
-pub enum AcquireError {
-    #[error("close")]
-    Close,
-    #[error("timeout")]
-    Timeout,
 }
