@@ -1,7 +1,7 @@
 use std::error::Error as StdError;
 use std::result::Result as StdResult;
 
-pub type BoxDynError = Box<dyn StdError>;
+pub type BoxDynError = Box<dyn StdError + Send + Sync + 'static>;
 
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]

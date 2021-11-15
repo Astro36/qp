@@ -1,6 +1,7 @@
 use crate::error::{Error, Result};
 use parking_lot::Mutex;
 use std::collections::VecDeque;
+use std::error::Error as StdError;
 use std::ops::{Deref, DerefMut};
 use std::result::Result as StdResult;
 use std::sync::Arc;
@@ -9,7 +10,7 @@ use tokio::sync::Semaphore;
 use tokio::time::timeout;
 
 pub trait Resource: Sized {
-    type Error;
+    type Error: StdError + Send + Sync + 'static;
 
     fn try_new() -> StdResult<Self, Self::Error>;
 }
@@ -87,19 +88,17 @@ struct Inner<T: Resource> {
 impl<T: Resource> Inner<T> {
     pub async fn acquire(&self) -> Result<Pooled<'_, T>> {
         // A `Semaphore::acquire` can only fail if the semaphore has been closed.
-        let permit = timeout(self.timeout, self.semaphore.acquire())
+        timeout(self.timeout, self.semaphore.acquire())
             .await
             .map_err(|_| Error::PoolTimedOut)?
-            .map_err(|_| Error::PoolClosed)?;
-        permit.forget();
-        let mut resources = self.resources.lock();
-        /* match resources.pop_front() {
-            Some(resource) => {}
-            None => {}
-        } */
+            .map_err(|_| Error::PoolClosed)?
+            .forget();
         Ok(Pooled {
             pool: self,
-            resource: Some(resources.pop_front().unwrap()),
+            resource: Some(match self.resources.lock().pop_front() {
+                Some(resource) => resource,
+                None => Resource::try_new().map_err(|e| Error::Resource(Box::new(e)))?,
+            }),
         })
     }
 }
