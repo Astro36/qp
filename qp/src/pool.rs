@@ -1,3 +1,4 @@
+use crate::error::{Error, Result};
 use parking_lot::Mutex;
 use std::collections::VecDeque;
 use std::ops::{Deref, DerefMut};
@@ -7,10 +8,6 @@ use std::time::Duration;
 use tokio::sync::Semaphore;
 use tokio::time::timeout;
 
-pub mod error;
-
-use error::{Error, Result};
-
 pub trait Resource: Sized {
     type Error;
 
@@ -18,7 +15,7 @@ pub trait Resource: Sized {
 }
 
 pub struct Pooled<'a, T: Resource> {
-    pool: &'a PoolInner<T>,
+    pool: &'a Inner<T>,
     resource: Option<T>,
 }
 
@@ -47,7 +44,7 @@ impl<T: Resource> Drop for Pooled<'_, T> {
 }
 
 pub struct Pool<T: Resource> {
-    inner: Arc<PoolInner<T>>,
+    inner: Arc<Inner<T>>,
 }
 
 impl<T: Resource> Clone for Pool<T> {
@@ -61,7 +58,7 @@ impl<T: Resource> Clone for Pool<T> {
 impl<T: Resource> Pool<T> {
     pub fn try_new(capacity: usize, timeout: Duration) -> Result<Self> {
         Ok(Pool {
-            inner: Arc::new(PoolInner {
+            inner: Arc::new(Inner {
                 capacity,
                 resources: Mutex::new(
                     (0..capacity)
@@ -80,14 +77,14 @@ impl<T: Resource> Pool<T> {
     }
 }
 
-struct PoolInner<T: Resource> {
+struct Inner<T: Resource> {
     capacity: usize,
     resources: Mutex<VecDeque<T>>,
     semaphore: Semaphore,
     timeout: Duration,
 }
 
-impl<T: Resource> PoolInner<T> {
+impl<T: Resource> Inner<T> {
     pub async fn acquire(&self) -> Result<Pooled<'_, T>> {
         // A `Semaphore::acquire` can only fail if the semaphore has been closed.
         let permit = timeout(self.timeout, self.semaphore.acquire())
