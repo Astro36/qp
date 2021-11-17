@@ -15,12 +15,12 @@ pub trait Resource: Sized {
     fn try_new() -> StdResult<Self, Self::Error>;
 }
 
-pub struct Pooled<'a, T: Resource> {
+pub struct ResourceGuard<'a, T: Resource> {
     pool: &'a Inner<T>,
     resource: Option<T>,
 }
 
-impl<T: Resource> Deref for Pooled<'_, T> {
+impl<T: Resource> Deref for ResourceGuard<'_, T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -28,18 +28,24 @@ impl<T: Resource> Deref for Pooled<'_, T> {
     }
 }
 
-impl<T: Resource> DerefMut for Pooled<'_, T> {
+impl<T: Resource> DerefMut for ResourceGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.resource.as_mut().unwrap()
     }
 }
 
-impl<T: Resource> Drop for Pooled<'_, T> {
+impl<T: Resource> Drop for ResourceGuard<'_, T> {
     fn drop(&mut self) {
-        self.pool
-            .resources
-            .lock()
-            .push_back(self.resource.take().unwrap());
+        if let Some(resource) = self.resource.take() {
+            self.pool.resources.lock().push_back(resource);
+            self.pool.semaphore.add_permits(1);
+        }
+    }
+}
+
+impl<T: Resource> ResourceGuard<'_, T> {
+    pub fn release(&mut self) {
+        self.resource.take();
         self.pool.semaphore.add_permits(1);
     }
 }
@@ -73,7 +79,7 @@ impl<T: Resource> Pool<T> {
         })
     }
 
-    pub async fn acquire(&self) -> Result<Pooled<'_, T>> {
+    pub async fn acquire(&self) -> Result<ResourceGuard<'_, T>> {
         self.inner.acquire().await
     }
 }
@@ -86,14 +92,14 @@ struct Inner<T: Resource> {
 }
 
 impl<T: Resource> Inner<T> {
-    pub async fn acquire(&self) -> Result<Pooled<'_, T>> {
+    pub async fn acquire(&self) -> Result<ResourceGuard<'_, T>> {
         // A `Semaphore::acquire` can only fail if the semaphore has been closed.
         timeout(self.timeout, self.semaphore.acquire())
             .await
             .map_err(|_| Error::PoolTimedOut)?
             .map_err(|_| Error::PoolClosed)?
             .forget();
-        Ok(Pooled {
+        Ok(ResourceGuard {
             pool: self,
             resource: Some(match self.resources.lock().pop_front() {
                 Some(resource) => resource,
