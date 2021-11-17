@@ -63,20 +63,15 @@ impl<T: Resource> Clone for Pool<T> {
 }
 
 impl<T: Resource> Pool<T> {
-    pub fn try_new(capacity: usize, timeout: Duration) -> Result<Self> {
-        Ok(Pool {
+    pub fn new(capacity: usize, timeout: Duration) -> Self {
+        Self {
             inner: Arc::new(Inner {
                 capacity,
-                resources: Mutex::new(
-                    (0..capacity)
-                        .map(|_| Resource::try_new())
-                        .filter_map(|resource| resource.ok())
-                        .collect::<VecDeque<T>>(),
-                ),
+                resources: Mutex::new(VecDeque::with_capacity(capacity)),
                 semaphore: Semaphore::new(capacity),
                 timeout,
             }),
-        })
+        }
     }
 
     pub async fn acquire(&self) -> Result<ResourceGuard<'_, T>> {
