@@ -66,7 +66,6 @@ impl<T: Resource> Pool<T> {
     pub fn new(capacity: usize, timeout: Duration) -> Self {
         Self {
             inner: Arc::new(Inner {
-                capacity,
                 resources: Mutex::new(VecDeque::with_capacity(capacity)),
                 semaphore: Semaphore::new(capacity),
                 timeout,
@@ -80,7 +79,6 @@ impl<T: Resource> Pool<T> {
 }
 
 struct Inner<T: Resource> {
-    capacity: usize,
     resources: Mutex<VecDeque<T>>,
     semaphore: Semaphore,
     timeout: Duration,
