@@ -96,7 +96,7 @@ impl<T: Resource> Inner<T> {
             .forget();
         Ok(ResourceGuard {
             pool: self,
-            resource: Some(self.get_or_create_resource().await?),
+            resource: Some(self.pop_or_create_resource().await?),
         })
     }
 
@@ -104,12 +104,12 @@ impl<T: Resource> Inner<T> {
         T::try_new().await.map_err(|e| Error::Resource(Box::new(e)))
     }
 
-    fn get_resource(&self) -> Option<T> {
+    fn pop_resource(&self) -> Option<T> {
         self.resources.lock().pop_front()
     }
 
-    async fn get_or_create_resource(&self) -> Result<T> {
-        match self.get_resource() {
+    async fn pop_or_create_resource(&self) -> Result<T> {
+        match self.pop_resource() {
             Some(resource) => Ok(resource),
             None => self.create_resource().await,
         }
