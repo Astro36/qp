@@ -11,7 +11,7 @@ use tokio::sync::Semaphore;
 use tokio::time::timeout;
 
 #[async_trait]
-pub trait Resource: Sized {
+pub trait Resource: Send + Sized + Sync {
     type Error: StdError + Send + Sync + 'static;
 
     async fn try_new() -> StdResult<Self, Self::Error>;
@@ -96,12 +96,18 @@ impl<T: Resource> Inner<T> {
             .forget();
         Ok(ResourceGuard {
             pool: self,
-            resource: Some(match self.resources.lock().pop_front() {
+            resource: Some(match self.pop_resource() {
                 Some(resource) => resource,
-                None => Resource::try_new()
-                    .await
-                    .map_err(|e| Error::Resource(Box::new(e)))?,
+                None => try_create_resource().await?,
             }),
         })
     }
+
+    fn pop_resource(&self) -> Option<T> {
+        self.resources.lock().pop_front()
+    }
+}
+
+async fn try_create_resource<T: Resource>() -> Result<T> {
+    T::try_new().await.map_err(|e| Error::Resource(Box::new(e)))
 }
