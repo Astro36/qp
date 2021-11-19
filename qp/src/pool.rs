@@ -1,4 +1,5 @@
 use crate::error::{Error, Result};
+use async_trait::async_trait;
 use parking_lot::Mutex;
 use std::collections::VecDeque;
 use std::error::Error as StdError;
@@ -9,10 +10,11 @@ use std::time::Duration;
 use tokio::sync::Semaphore;
 use tokio::time::timeout;
 
-pub trait Resource: Sized {
+#[async_trait]
+pub trait Resource: Send + Sized + Sync {
     type Error: StdError + Send + Sync + 'static;
 
-    fn try_new() -> StdResult<Self, Self::Error>;
+    async fn try_new() -> StdResult<Self, Self::Error>;
 }
 
 pub struct ResourceGuard<'a, T: Resource> {
@@ -94,10 +96,22 @@ impl<T: Resource> Inner<T> {
             .forget();
         Ok(ResourceGuard {
             pool: self,
-            resource: Some(match self.resources.lock().pop_front() {
-                Some(resource) => resource,
-                None => Resource::try_new().map_err(|e| Error::Resource(Box::new(e)))?,
-            }),
+            resource: Some(self.pop_or_create_resource().await?),
         })
+    }
+
+    async fn create_resource(&self) -> Result<T> {
+        T::try_new().await.map_err(|e| Error::Resource(Box::new(e)))
+    }
+
+    fn pop_resource(&self) -> Option<T> {
+        self.resources.lock().pop_front()
+    }
+
+    async fn pop_or_create_resource(&self) -> Result<T> {
+        match self.pop_resource() {
+            Some(resource) => Ok(resource),
+            None => self.create_resource().await,
+        }
     }
 }
