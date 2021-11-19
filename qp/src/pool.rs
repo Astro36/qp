@@ -39,7 +39,7 @@ impl<T: Resource> DerefMut for ResourceGuard<'_, T> {
 impl<T: Resource> Drop for ResourceGuard<'_, T> {
     fn drop(&mut self) {
         if let Some(resource) = self.resource.take() {
-            self.pool.resources.lock().push_back(resource);
+            self.pool.push_resource(resource);
             self.pool.semaphore.add_permits(1);
         }
     }
@@ -113,5 +113,9 @@ impl<T: Resource> Inner<T> {
             Some(resource) => Ok(resource),
             None => self.create_resource().await,
         }
+    }
+
+    fn push_resource(&self, resource: T) {
+        self.resources.lock().push_back(resource);
     }
 }
