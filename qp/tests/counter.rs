@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+use qp::async_trait;
 use qp::pool::{Pool, Resource};
 use std::convert::Infallible;
 use std::time::Duration;
