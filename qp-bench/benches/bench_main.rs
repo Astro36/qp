@@ -17,6 +17,14 @@ fn bench_async_pool(c: &mut Criterion) {
                 },
             );
             group.bench_with_input(
+                BenchmarkId::new("mobc", format!("pool={} worker={}", pool_size, workers)),
+                &params,
+                |b, &p| {
+                    b.to_async(Runtime::new().unwrap())
+                        .iter(|| async_pool::mobc::run_with(p.0, p.1))
+                },
+            );
+            group.bench_with_input(
                 BenchmarkId::new("qp", format!("pool={} worker={}", pool_size, workers)),
                 &params,
                 |b, &p| {
