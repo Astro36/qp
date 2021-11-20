@@ -1,7 +1,6 @@
 use qp::async_trait;
 use qp::pool::{Pool, Resource};
 use std::convert::Infallible;
-use std::time::Duration;
 
 pub struct Int(i32);
 
@@ -15,7 +14,7 @@ impl Resource for Int {
 }
 
 pub async fn run_with(pool_size: usize, workers: usize) {
-    let pool: Pool<Int> = Pool::new(pool_size, Duration::from_millis(100));
+    let pool: Pool<Int> = Pool::new(pool_size);
     let handles = (0..workers)
         .map(|_| {
             let pool = pool.clone();

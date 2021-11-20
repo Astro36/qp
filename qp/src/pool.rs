@@ -65,12 +65,11 @@ impl<T: Resource> Clone for Pool<T> {
 }
 
 impl<T: Resource> Pool<T> {
-    pub fn new(capacity: usize, timeout: Duration) -> Self {
+    pub fn new(max_size: usize) -> Self {
         Self {
             inner: Arc::new(Inner {
-                resources: Mutex::new(VecDeque::with_capacity(capacity)),
-                semaphore: Semaphore::new(capacity),
-                timeout,
+                resources: Mutex::new(VecDeque::with_capacity(max_size)),
+                semaphore: Semaphore::new(max_size),
             }),
         }
     }
@@ -83,21 +82,26 @@ impl<T: Resource> Pool<T> {
 struct Inner<T: Resource> {
     resources: Mutex<VecDeque<T>>,
     semaphore: Semaphore,
-    timeout: Duration,
 }
 
 impl<T: Resource> Inner<T> {
     pub async fn acquire(&self) -> Result<ResourceGuard<'_, T>> {
         // A `Semaphore::acquire` can only fail if the semaphore has been closed.
-        timeout(self.timeout, self.semaphore.acquire())
+        self.semaphore
+            .acquire()
             .await
-            .map_err(|_| Error::PoolTimedOut)?
             .map_err(|_| Error::PoolClosed)?
             .forget();
         Ok(ResourceGuard {
             pool: self,
             resource: Some(self.pop_or_create_resource().await?),
         })
+    }
+
+    pub async fn acquire_timeout(&self, duration: Duration) -> Result<ResourceGuard<'_, T>> {
+        timeout(duration, self.acquire())
+            .await
+            .map_err(|_| Error::PoolTimedOut)?
     }
 
     async fn create_resource(&self) -> Result<T> {

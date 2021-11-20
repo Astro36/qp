@@ -37,7 +37,7 @@ impl Counter {
 
 #[tokio::test]
 async fn main() {
-    let pool = Pool::<Counter>::new(MAX_POOL_SIZE, Duration::from_millis(100));
+    let pool = Pool::<Counter>::new(MAX_POOL_SIZE);
 
     let handles = (0..WORKERS)
         .map(|_| {
