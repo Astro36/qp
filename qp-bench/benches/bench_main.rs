@@ -9,6 +9,14 @@ fn bench_async_pool(c: &mut Criterion) {
         for workers in [1, 4, 16, 64].into_iter() {
             let params = (pool_size as usize, workers as usize);
             group.bench_with_input(
+                BenchmarkId::new("bb8", format!("pool={} worker={}", pool_size, workers)),
+                &params,
+                |b, &p| {
+                    b.to_async(Runtime::new().unwrap())
+                        .iter(|| async_pool::bb8::run_with(p.0, p.1))
+                },
+            );
+            group.bench_with_input(
                 BenchmarkId::new("deadpool", format!("pool={} worker={}", pool_size, workers)),
                 &params,
                 |b, &p| {
