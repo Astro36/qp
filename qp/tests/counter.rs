@@ -1,5 +1,5 @@
 use qp::async_trait;
-use qp::pool::{Pool, Resource, take};
+use qp::pool::{self, Pool, Resource};
 use std::convert::Infallible;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -18,6 +18,10 @@ impl Resource for Counter {
 
     async fn try_new() -> Result<Self, Self::Error> {
         Ok(Self::new())
+    }
+
+    async fn is_valid(&self) -> bool {
+        true
     }
 }
 
@@ -59,7 +63,7 @@ async fn main() {
     for _ in 0..MAX_POOL_SIZE {
         let counter = pool.acquire().await.unwrap();
         sum += dbg!(counter.get());
-        drop(take(counter));
+        drop(pool::take_resource(counter));
     }
     assert_eq!(sum as usize, WORKERS * ITERATIONS);
 }

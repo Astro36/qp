@@ -13,6 +13,10 @@ pub trait Resource: Send + Sized + Sync {
     type Error: StdError + Send + Sync + 'static;
 
     async fn try_new() -> StdResult<Self, Self::Error>;
+
+    async fn is_valid(&self) -> bool {
+        true
+    }
 }
 
 pub struct ResourceGuard<'a, T: Resource> {
@@ -98,10 +102,12 @@ impl<T: Resource> Inner<T> {
     }
 
     async fn pop_or_create_resource(&self) -> Result<T> {
-        match self.pop_resource() {
-            Some(resource) => Ok(resource),
-            None => self.create_resource().await,
+        while let Some(resource) = self.pop_resource() {
+            if resource.is_valid().await {
+                return Ok(resource);
+            }
         }
+        self.create_resource().await
     }
 
     fn push_resource(&self, resource: T) {
@@ -109,12 +115,7 @@ impl<T: Resource> Inner<T> {
     }
 }
 
-pub fn release<T: Resource>(mut guard: ResourceGuard<'_, T>) {
-    guard.pool.push_resource(guard.resource.take().unwrap());
-    guard.pool.semaphore.add_permits(1);
-}
-
-pub fn take<T: Resource>(mut guard: ResourceGuard<'_, T>) -> T {
+pub fn take_resource<T: Resource>(mut guard: ResourceGuard<'_, T>) -> T {
     guard.pool.semaphore.add_permits(1);
     guard.resource.take().unwrap()
 }
