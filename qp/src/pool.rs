@@ -45,13 +45,6 @@ impl<T: Resource> Drop for ResourceGuard<'_, T> {
     }
 }
 
-impl<T: Resource> ResourceGuard<'_, T> {
-    pub fn release(&mut self) {
-        self.resource.take();
-        self.pool.semaphore.add_permits(1);
-    }
-}
-
 pub struct Pool<T: Resource> {
     inner: Arc<Inner<T>>,
 }
@@ -122,4 +115,14 @@ impl<T: Resource> Inner<T> {
     fn push_resource(&self, resource: T) {
         self.resources.lock().push_back(resource);
     }
+}
+
+pub fn release<T: Resource>(mut guard: ResourceGuard<'_, T>) {
+    guard.pool.push_resource(guard.resource.take().unwrap());
+    guard.pool.semaphore.add_permits(1);
+}
+
+pub fn take<T: Resource>(mut guard: ResourceGuard<'_, T>) -> T {
+    guard.pool.semaphore.add_permits(1);
+    guard.resource.take().unwrap()
 }

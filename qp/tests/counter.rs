@@ -1,5 +1,5 @@
 use qp::async_trait;
-use qp::pool::{Pool, Resource};
+use qp::pool::{Pool, Resource, take};
 use std::convert::Infallible;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -57,9 +57,9 @@ async fn main() {
 
     let mut sum = 0;
     for _ in 0..MAX_POOL_SIZE {
-        let mut counter = pool.acquire().await.unwrap();
+        let counter = pool.acquire().await.unwrap();
         sum += dbg!(counter.get());
-        counter.release();
+        drop(take(counter));
     }
     assert_eq!(sum as usize, WORKERS * ITERATIONS);
 }

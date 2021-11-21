@@ -13,7 +13,7 @@
 
 ```rust
 use qp::async_trait;
-use qp::pool::{Pool, Resource};
+use qp::pool::{Pool, Resource, release, take};
 use std::convert::Infallible;
 
 pub struct Int(i32);
@@ -30,12 +30,21 @@ impl Resource for Int {
 #[tokio::main]
 async fn main() {
     let pool: Pool<Int> = Pool::new(4); // max_size=4
-    let mut int = pool.acquire().await.unwrap(); // create a resource when the pool is empty or all resources are occupied
+
+    // create a resource when the pool is empty or all resources are occupied.
+    let mut int = pool.acquire().await.unwrap();
     int.0 = 1;
     dbg!(int.0); // 1
-    int.release(); // remove the resource from the pool
+    // release the resource early and put it into the pool.
+    release(int);
+
     let int = pool.acquire().await.unwrap();
-    dbg!(int.0); // 0
+    // take the resource from the pool.
+    let raw_int: Int = take(int); // raw resource
+    drop(raw_int);
+
+    let _int = pool.acquire().await.unwrap();
+    // `_int` will be auto released by `ResourceGuard` destructor.
 }
 ```
 
