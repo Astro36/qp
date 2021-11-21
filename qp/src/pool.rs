@@ -6,9 +6,7 @@ use std::error::Error as StdError;
 use std::ops::{Deref, DerefMut};
 use std::result::Result as StdResult;
 use std::sync::Arc;
-use std::time::Duration;
 use tokio::sync::Semaphore;
-use tokio::time::timeout;
 
 #[async_trait]
 pub trait Resource: Send + Sized + Sync {
@@ -89,12 +87,6 @@ impl<T: Resource> Inner<T> {
             pool: self,
             resource: Some(self.pop_or_create_resource().await?),
         })
-    }
-
-    pub async fn acquire_timeout(&self, duration: Duration) -> Result<ResourceGuard<'_, T>> {
-        timeout(duration, self.acquire())
-            .await
-            .map_err(|_| Error::PoolTimedOut)?
     }
 
     async fn create_resource(&self) -> Result<T> {
