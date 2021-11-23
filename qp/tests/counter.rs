@@ -1,5 +1,6 @@
-use qp::async_trait;
-use qp::pool::{self, Pool, Resource};
+use async_trait::async_trait;
+use qp::pool::{self, Pool};
+use qp::resource::Factory;
 use std::convert::Infallible;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -8,40 +9,37 @@ const MAX_POOL_SIZE: usize = 4;
 const WORKERS: usize = 8;
 const ITERATIONS: usize = 16;
 
-struct Counter {
-    value: i32,
-}
-
-#[async_trait]
-impl Resource for Counter {
-    type Error = Infallible;
-
-    async fn try_new() -> Result<Self, Self::Error> {
-        Ok(Self::new())
-    }
-
-    async fn is_valid(&self) -> bool {
-        true
-    }
-}
+struct Counter(i32);
 
 impl Counter {
     fn new() -> Self {
-        Self { value: 0 }
+        Self(0)
     }
 
     fn get(&self) -> i32 {
-        self.value
+        self.0
     }
 
     fn increase(&mut self) {
-        self.value += 1;
+        self.0 += 1;
+    }
+}
+
+struct CounterFactory;
+
+#[async_trait]
+impl Factory for CounterFactory {
+    type Output = Counter;
+    type Error = Infallible;
+
+    async fn try_create_resource(&self) -> Result<Self::Output, Self::Error> {
+        Ok(Self::Output::new())
     }
 }
 
 #[tokio::test]
 async fn main() {
-    let pool = Pool::<Counter>::new(MAX_POOL_SIZE);
+    let pool = Pool::new(CounterFactory, MAX_POOL_SIZE);
 
     let handles = (0..WORKERS)
         .map(|_| {
