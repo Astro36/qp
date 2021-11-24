@@ -1,44 +1,32 @@
 use crate::error::{Error, Result};
-use async_trait::async_trait;
+use crate::resource::Factory;
+use futures::future::TryFutureExt;
 use parking_lot::Mutex;
 use std::collections::VecDeque;
-use std::error::Error as StdError;
 use std::ops::{Deref, DerefMut};
-use std::result::Result as StdResult;
 use std::sync::Arc;
 use tokio::sync::Semaphore;
 
-#[async_trait]
-pub trait Resource: Send + Sized + Sync {
-    type Error: StdError + Send + Sync + 'static;
-
-    async fn try_new() -> StdResult<Self, Self::Error>;
-
-    async fn is_valid(&self) -> bool {
-        true
-    }
+pub struct Pooled<'a, F: Factory> {
+    pool: &'a Inner<F>,
+    resource: Option<F::Output>,
 }
 
-pub struct ResourceGuard<'a, T: Resource> {
-    pool: &'a Inner<T>,
-    resource: Option<T>,
-}
-
-impl<T: Resource> Deref for ResourceGuard<'_, T> {
-    type Target = T;
+impl<F: Factory> Deref for Pooled<'_, F> {
+    type Target = F::Output;
 
     fn deref(&self) -> &Self::Target {
         self.resource.as_ref().unwrap()
     }
 }
 
-impl<T: Resource> DerefMut for ResourceGuard<'_, T> {
+impl<F: Factory> DerefMut for Pooled<'_, F> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.resource.as_mut().unwrap()
     }
 }
 
-impl<T: Resource> Drop for ResourceGuard<'_, T> {
+impl<F: Factory> Drop for Pooled<'_, F> {
     fn drop(&mut self) {
         if let Some(resource) = self.resource.take() {
             self.pool.push_resource(resource);
@@ -47,11 +35,11 @@ impl<T: Resource> Drop for ResourceGuard<'_, T> {
     }
 }
 
-pub struct Pool<T: Resource> {
-    inner: Arc<Inner<T>>,
+pub struct Pool<F: Factory> {
+    inner: Arc<Inner<F>>,
 }
 
-impl<T: Resource> Clone for Pool<T> {
+impl<F: Factory> Clone for Pool<F> {
     fn clone(&self) -> Self {
         Self {
             inner: self.inner.clone(),
@@ -59,63 +47,64 @@ impl<T: Resource> Clone for Pool<T> {
     }
 }
 
-impl<T: Resource> Pool<T> {
-    pub fn new(max_size: usize) -> Self {
+impl<F: Factory> Pool<F> {
+    pub fn new(factory: F, max_size: usize) -> Self {
         Self {
             inner: Arc::new(Inner {
+                factory,
                 resources: Mutex::new(VecDeque::with_capacity(max_size)),
                 semaphore: Semaphore::new(max_size),
             }),
         }
     }
 
-    pub async fn acquire(&self) -> Result<ResourceGuard<'_, T>> {
+    pub async fn acquire(&self) -> Result<Pooled<'_, F>> {
         self.inner.acquire().await
     }
 }
 
-struct Inner<T: Resource> {
-    resources: Mutex<VecDeque<T>>,
+struct Inner<F: Factory> {
+    factory: F,
+    resources: Mutex<VecDeque<F::Output>>,
     semaphore: Semaphore,
 }
 
-impl<T: Resource> Inner<T> {
-    pub async fn acquire(&self) -> Result<ResourceGuard<'_, T>> {
+impl<F: Factory> Inner<F> {
+    pub async fn acquire(&self) -> Result<Pooled<'_, F>> {
         // A `Semaphore::acquire` can only fail if the semaphore has been closed.
         self.semaphore
             .acquire()
-            .await
-            .map_err(|_| Error::PoolClosed)?
+            .map_err(|_| Error::PoolClosed)
+            .await?
             .forget();
-        Ok(ResourceGuard {
+        Ok(Pooled {
             pool: self,
             resource: Some(self.pop_or_create_resource().await?),
         })
     }
 
-    async fn create_resource(&self) -> Result<T> {
-        T::try_new().await.map_err(|e| Error::Resource(Box::new(e)))
-    }
-
-    fn pop_resource(&self) -> Option<T> {
+    fn pop_resource(&self) -> Option<F::Output> {
         self.resources.lock().pop_front()
     }
 
-    async fn pop_or_create_resource(&self) -> Result<T> {
+    async fn pop_or_create_resource(&self) -> Result<F::Output> {
         while let Some(resource) = self.pop_resource() {
-            if resource.is_valid().await {
+            if self.factory.validate(&resource).await {
                 return Ok(resource);
             }
         }
-        self.create_resource().await
+        self.factory
+            .try_create_resource()
+            .map_err(|e| Error::Resource(Box::new(e)))
+            .await
     }
 
-    fn push_resource(&self, resource: T) {
+    fn push_resource(&self, resource: F::Output) {
         self.resources.lock().push_back(resource);
     }
 }
 
-pub fn take_resource<T: Resource>(mut guard: ResourceGuard<'_, T>) -> T {
+pub fn take_resource<F: Factory>(mut guard: Pooled<'_, F>) -> F::Output {
     guard.pool.semaphore.add_permits(1);
     guard.resource.take().unwrap()
 }
