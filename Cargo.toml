@@ -1,2 +1,2 @@
 [workspace]
-members = ["qp", "qp-bench"]
+members = ["qp", "qp-bench", "qp-postgres"]
