@@ -33,7 +33,7 @@ where
     }
 
     async fn validate(&self, conn: &Self::Output) -> bool {
-        conn.is_closed()
+        !conn.is_closed()
     }
 }
 
