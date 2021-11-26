@@ -4,19 +4,26 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
     paths:
       - '.github/workflows/qp-postgres.yml'
       - 'qp-postgres/src'
       - 'qp-postgres/tests'
       - 'qp-postgres/Cargo.toml'
-  workflow_run:
-    workflows:
-      - Quick Pool
-    types:
-      - completed
+      - 'qp/src'
+      - 'qp/tests'
+      - 'qp/Cargo.toml'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/qp-postgres.yml'
+      - '.github/workflows/qp.yml'
+      - 'qp-postgres/src'
+      - 'qp-postgres/tests'
+      - 'qp-postgres/Cargo.toml'
+      - 'qp/src'
+      - 'qp/tests'
+      - 'qp/Cargo.toml'
 
 jobs:
   lint:
