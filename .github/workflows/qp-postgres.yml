@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - '.github/workflows/qp-postgres.yml'
+      - '.github/workflows/qp.yml'
       - 'qp-postgres/src'
       - 'qp-postgres/tests'
       - 'qp-postgres/Cargo.toml'
@@ -27,6 +28,7 @@ on:
 
 jobs:
   lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -49,4 +51,39 @@ jobs:
 
     - name: Run Clippy
       run: cargo clippy -p qp-postgres -- -D warnings
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v2
+
+    - name: Cache crates
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('qp-postgres/Cargo.toml') }}
+
+    - name: Test sources
+      run: cargo test -p qp-postgres
 
