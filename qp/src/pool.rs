@@ -94,7 +94,7 @@ impl<F: Factory> Inner<F> {
             }
         }
         self.factory
-            .try_create_resource()
+            .try_create()
             .map_err(|e| Error::Resource(Box::new(e)))
             .await
     }

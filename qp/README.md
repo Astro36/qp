@@ -24,7 +24,7 @@ impl Factory for IntFactory {
     type Output = i32;
     type Error = Infallible;
 
-    async fn try_create_resource(&self) -> Result<Self::Output, Self::Error> {
+    async fn try_create(&self) -> Result<Self::Output, Self::Error> {
         Ok(0)
     }
 

@@ -32,7 +32,7 @@ impl Factory for CounterFactory {
     type Output = Counter;
     type Error = Infallible;
 
-    async fn try_create_resource(&self) -> Result<Self::Output, Self::Error> {
+    async fn try_create(&self) -> Result<Self::Output, Self::Error> {
         Ok(Self::Output::new())
     }
 }

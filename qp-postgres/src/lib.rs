@@ -26,14 +26,14 @@ where
     type Output = Client;
     type Error = Error;
 
-    async fn try_create_resource(&self) -> Result<Self::Output, Self::Error> {
+    async fn try_create(&self) -> Result<Self::Output, Self::Error> {
         let (client, conn) = self.config.connect(self.tls.clone()).await?;
         tokio::spawn(conn);
         Ok(client)
     }
 
-    async fn validate(&self, conn: &Self::Output) -> bool {
-        !conn.is_closed()
+    async fn validate(&self, client: &Self::Output) -> bool {
+        !client.is_closed()
     }
 }
 
