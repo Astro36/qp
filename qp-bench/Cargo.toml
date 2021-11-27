@@ -1,14 +1,26 @@
 [package]
 name = "qp-bench"
-version = "1.0.0"
+version = "0.1.0"
+authors = ["Seungjae Park <astro.psj@gmail.com>"]
 edition = "2021"
+rust-version = "1.56"
+description = "Rust Async Resource Pool Benchmark"
+documentation = "https://docs.rs/qp-bench"
+repository = "https://github.com/Astro36/qp"
+license = "MIT"
+keywords = ["async", "resource", "pool", "tokio", "benchmark"]
+categories = ["asynchronous", "data-structures"]
 
 [dependencies]
 bb8 = "0.7.1"
+bb8-postgres = "0.7.0"
 criterion = { version = "0.3.5", features = ["async_tokio"] }
 deadpool = "0.9.2"
+deadpool-postgres = "0.10.1"
 mobc = "0.7.3"
-qp = { path = "../qp" }
+mobc-postgres = "0.7.0"
+qp = { path = "../qp", version = "0.1.0" }
+qp-postgres = { path = "../qp-postgres", version = "0.1.0" }
 tokio = { version = "1.14.0", features = ["full"] }
 
 [[bench]]
