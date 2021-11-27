@@ -4,6 +4,9 @@ use qp::resource::Factory;
 use tokio_postgres::tls::{MakeTlsConnect, TlsConnect};
 use tokio_postgres::{Client, Config, Error, Socket};
 
+pub use qp;
+pub use tokio_postgres;
+
 pub struct PgConnFactory<T>
 where
     T: MakeTlsConnect<Socket> + Clone + Send + Sync,
