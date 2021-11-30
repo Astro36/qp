@@ -1,40 +1,27 @@
+use super::DB_URI;
+use bb8::Pool;
+use bb8_postgres::tokio_postgres::NoTls;
+use bb8_postgres::PostgresConnectionManager;
 use criterion::Bencher;
-use deadpool::async_trait;
-use deadpool::managed::{Manager, Pool, RecycleResult};
-use std::convert::Infallible;
 use std::time::Instant;
 use tokio::runtime::Runtime;
-
-pub struct IntManager;
-
-#[async_trait]
-impl Manager for IntManager {
-    type Type = i32;
-    type Error = Infallible;
-
-    async fn create(&self) -> Result<Self::Type, Self::Error> {
-        Ok(0)
-    }
-
-    async fn recycle(&self, _: &mut Self::Type) -> RecycleResult<Self::Error> {
-        Ok(())
-    }
-}
 
 pub fn bench_with_input(bencher: &mut Bencher, input: &(usize, usize)) {
     bencher
         .to_async(Runtime::new().unwrap())
         .iter_custom(|iters| async move {
-            let pool: Pool<IntManager> =
-                Pool::builder(IntManager).max_size(input.0).build().unwrap();
+            let manager = PostgresConnectionManager::new_from_stringlike(DB_URI, NoTls).unwrap();
+            let pool = Pool::builder().build(manager).await.unwrap();
             let start = Instant::now();
             for _ in 0..iters {
                 let handles = (0..input.1)
                     .map(|_| {
                         let pool = pool.clone();
                         tokio::spawn(async move {
-                            let int = pool.get().await.unwrap();
-                            criterion::black_box(*int);
+                            let client = pool.get().await.unwrap();
+                            let row = client.query_one("SELECT 1", &[]).await.unwrap();
+                            let int: i32 = row.get(0);
+                            criterion::black_box(int);
                         })
                     })
                     .collect::<Vec<_>>();

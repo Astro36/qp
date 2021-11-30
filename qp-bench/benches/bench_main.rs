@@ -1,6 +1,7 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
 pub mod core;
+pub mod postgres;
 
 macro_rules! benchmark_id {
     ($fn_name:expr, $pool_size:expr, $workers:expr) => {
@@ -18,7 +19,7 @@ fn product(a: Vec<usize>, b: Vec<usize>) -> Vec<(usize, usize)> {
     c
 }
 
-fn bench_core(c: &mut Criterion) {
+pub fn bench_core(c: &mut Criterion) {
     let mut group = c.benchmark_group("core");
     let inputs = product(vec![4usize, 8, 16], vec![1usize, 4, 16, 64]);
     for input in inputs {
@@ -46,5 +47,33 @@ fn bench_core(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_core);
+pub fn bench_postgres(c: &mut Criterion) {
+    let mut group = c.benchmark_group("postgres");
+    let inputs = product(vec![4usize, 8, 16], vec![1usize, 4, 16, 64]);
+    for input in inputs {
+        group.bench_with_input(
+            benchmark_id!("bb8", input.0, input.1),
+            &input,
+            postgres::bb8::bench_with_input,
+        );
+        group.bench_with_input(
+            benchmark_id!("deadpool", input.0, input.1),
+            &input,
+            postgres::deadpool::bench_with_input,
+        );
+        group.bench_with_input(
+            benchmark_id!("mobc", input.0, input.1),
+            &input,
+            postgres::mobc::bench_with_input,
+        );
+        group.bench_with_input(
+            benchmark_id!("qp", input.0, input.1),
+            &input,
+            postgres::qp::bench_with_input,
+        );
+    }
+    group.finish();
+}
+
+criterion_group!(benches, bench_core, bench_postgres);
 criterion_main!(benches);
