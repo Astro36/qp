@@ -1,5 +1,6 @@
 use super::DB_URI;
 use criterion::Bencher;
+use futures::prelude::*;
 use mobc::Pool;
 use mobc_postgres::tokio_postgres::NoTls;
 use mobc_postgres::PgConnectionManager;
@@ -13,6 +14,7 @@ pub fn bench_with_input(bencher: &mut Bencher, input: &(usize, usize)) {
             let config = DB_URI.parse().unwrap();
             let manager = PgConnectionManager::new(config, NoTls);
             let pool = Pool::builder().max_open(input.0 as u64).build(manager);
+            drop(future::join_all((0..input.0).map(|_| pool.get())).await);
             let start = Instant::now();
             for _ in 0..iters {
                 let handles = (0..input.1)

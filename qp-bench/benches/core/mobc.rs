@@ -1,5 +1,7 @@
+use async_trait::async_trait;
 use criterion::Bencher;
-use mobc::{async_trait, Manager, Pool};
+use futures::prelude::*;
+use mobc::{Manager, Pool};
 use std::convert::Infallible;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
@@ -26,6 +28,7 @@ pub fn bench_with_input(bencher: &mut Bencher, input: &(usize, usize)) {
         .to_async(Runtime::new().unwrap())
         .iter_custom(|iters| async move {
             let pool = Pool::builder().max_open(input.0 as u64).build(IntManager);
+            drop(future::join_all((0..input.0).map(|_| pool.get())).await);
             let start = Instant::now();
             for _ in 0..iters {
                 let handles = (0..input.1)

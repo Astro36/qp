@@ -1,6 +1,7 @@
+use async_trait::async_trait;
 use bb8::{ManageConnection, Pool, PooledConnection};
 use criterion::Bencher;
-use qp::async_trait;
+use futures::prelude::*;
 use std::convert::Infallible;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
@@ -35,6 +36,7 @@ pub fn bench_with_input(bencher: &mut Bencher, input: &(usize, usize)) {
                 .build(IntManager)
                 .await
                 .unwrap();
+            drop(future::join_all((0..input.0).map(|_| pool.get())).await);
             let start = Instant::now();
             for _ in 0..iters {
                 let handles = (0..input.1)

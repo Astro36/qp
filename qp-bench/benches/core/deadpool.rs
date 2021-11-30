@@ -1,6 +1,7 @@
+use async_trait::async_trait;
 use criterion::Bencher;
-use deadpool::async_trait;
 use deadpool::managed::{Manager, Pool, RecycleResult};
+use futures::prelude::*;
 use std::convert::Infallible;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
@@ -28,6 +29,7 @@ pub fn bench_with_input(bencher: &mut Bencher, input: &(usize, usize)) {
         .iter_custom(|iters| async move {
             let pool: Pool<IntManager> =
                 Pool::builder(IntManager).max_size(input.0).build().unwrap();
+            drop(future::join_all((0..input.0).map(|_| pool.get())).await);
             let start = Instant::now();
             for _ in 0..iters {
                 let handles = (0..input.1)

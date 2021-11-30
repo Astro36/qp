@@ -1,4 +1,5 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use std::time::Duration;
 
 pub mod core;
 pub mod postgres;
@@ -21,6 +22,10 @@ fn product(a: Vec<usize>, b: Vec<usize>) -> Vec<(usize, usize)> {
 
 pub fn bench_core(c: &mut Criterion) {
     let mut group = c.benchmark_group("core");
+    group
+        .measurement_time(Duration::from_secs(3))
+        .nresamples(10_000)
+        .warm_up_time(Duration::from_millis(100));
     let inputs = product(vec![4usize, 8, 16], vec![1usize, 4, 16, 64]);
     for input in inputs {
         group.bench_with_input(
@@ -49,6 +54,10 @@ pub fn bench_core(c: &mut Criterion) {
 
 pub fn bench_postgres(c: &mut Criterion) {
     let mut group = c.benchmark_group("postgres");
+    group
+        .measurement_time(Duration::from_secs(3))
+        .nresamples(10_000)
+        .warm_up_time(Duration::from_millis(100));
     let inputs = product(vec![4usize, 8, 16], vec![1usize, 4, 16, 64]);
     for input in inputs {
         group.bench_with_input(
