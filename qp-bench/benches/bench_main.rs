@@ -1,49 +1,88 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use tokio::runtime::Runtime;
+use std::time::Duration;
 
-pub mod async_pool;
+pub mod core;
+pub mod postgres;
 
-fn bench_async_pool(c: &mut Criterion) {
-    let mut group = c.benchmark_group("async_pool");
-    for pool_size in [4, 8, 16].into_iter() {
-        for workers in [1, 4, 16, 64].into_iter() {
-            let params = (pool_size as usize, workers as usize);
-            group.bench_with_input(
-                BenchmarkId::new("bb8", format!("pool={} worker={}", pool_size, workers)),
-                &params,
-                |b, &p| {
-                    b.to_async(Runtime::new().unwrap())
-                        .iter(|| async_pool::bb8::run_with(p.0, p.1))
-                },
-            );
-            group.bench_with_input(
-                BenchmarkId::new("deadpool", format!("pool={} worker={}", pool_size, workers)),
-                &params,
-                |b, &p| {
-                    b.to_async(Runtime::new().unwrap())
-                        .iter(|| async_pool::deadpool::run_with(p.0, p.1))
-                },
-            );
-            group.bench_with_input(
-                BenchmarkId::new("mobc", format!("pool={} worker={}", pool_size, workers)),
-                &params,
-                |b, &p| {
-                    b.to_async(Runtime::new().unwrap())
-                        .iter(|| async_pool::mobc::run_with(p.0, p.1))
-                },
-            );
-            group.bench_with_input(
-                BenchmarkId::new("qp", format!("pool={} worker={}", pool_size, workers)),
-                &params,
-                |b, &p| {
-                    b.to_async(Runtime::new().unwrap())
-                        .iter(|| async_pool::qp::run_with(p.0, p.1))
-                },
-            );
+macro_rules! benchmark_id {
+    ($fn_name:expr, $pool_size:expr, $workers:expr) => {
+        BenchmarkId::new($fn_name, format!("pool={} worker={}", $pool_size, $workers))
+    };
+}
+
+fn product(a: Vec<usize>, b: Vec<usize>) -> Vec<(usize, usize)> {
+    let mut c = Vec::with_capacity(a.len() * b.len());
+    for x in &a {
+        for y in &b {
+            c.push((*x, *y));
         }
+    }
+    c
+}
+
+pub fn bench_core(c: &mut Criterion) {
+    let mut group = c.benchmark_group("core");
+    group
+        .measurement_time(Duration::from_secs(3))
+        .nresamples(10_000)
+        .warm_up_time(Duration::from_millis(100));
+    let inputs = product(vec![4usize, 8, 16], vec![1usize, 4, 16, 64]);
+    for input in inputs {
+        group.bench_with_input(
+            benchmark_id!("bb8", input.0, input.1),
+            &input,
+            core::bb8::bench_with_input,
+        );
+        group.bench_with_input(
+            benchmark_id!("deadpool", input.0, input.1),
+            &input,
+            core::deadpool::bench_with_input,
+        );
+        group.bench_with_input(
+            benchmark_id!("mobc", input.0, input.1),
+            &input,
+            core::mobc::bench_with_input,
+        );
+        group.bench_with_input(
+            benchmark_id!("qp", input.0, input.1),
+            &input,
+            core::qp::bench_with_input,
+        );
     }
     group.finish();
 }
 
-criterion_group!(benches, bench_async_pool);
+pub fn bench_postgres(c: &mut Criterion) {
+    let mut group = c.benchmark_group("postgres");
+    group
+        .measurement_time(Duration::from_secs(3))
+        .nresamples(10_000)
+        .warm_up_time(Duration::from_millis(100));
+    let inputs = product(vec![4usize, 8, 16], vec![1usize, 4, 16, 64]);
+    for input in inputs {
+        group.bench_with_input(
+            benchmark_id!("bb8", input.0, input.1),
+            &input,
+            postgres::bb8::bench_with_input,
+        );
+        group.bench_with_input(
+            benchmark_id!("deadpool", input.0, input.1),
+            &input,
+            postgres::deadpool::bench_with_input,
+        );
+        group.bench_with_input(
+            benchmark_id!("mobc", input.0, input.1),
+            &input,
+            postgres::mobc::bench_with_input,
+        );
+        group.bench_with_input(
+            benchmark_id!("qp", input.0, input.1),
+            &input,
+            postgres::qp::bench_with_input,
+        );
+    }
+    group.finish();
+}
+
+criterion_group!(benches, bench_core, bench_postgres);
 criterion_main!(benches);
