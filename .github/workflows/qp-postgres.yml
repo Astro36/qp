@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - '.github/workflows/qp-postgres.yml'
-      - '.github/workflows/qp.yml'
       - 'qp-postgres/src'
       - 'qp-postgres/tests'
       - 'qp-postgres/Cargo.toml'
@@ -18,7 +17,6 @@ on:
       - main
     paths:
       - '.github/workflows/qp-postgres.yml'
-      - '.github/workflows/qp.yml'
       - 'qp-postgres/src'
       - 'qp-postgres/tests'
       - 'qp-postgres/Cargo.toml'
