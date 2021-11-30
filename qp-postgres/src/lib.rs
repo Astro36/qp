@@ -7,6 +7,8 @@ use tokio_postgres::{Client, Config, Error, Socket};
 pub use qp;
 pub use tokio_postgres;
 
+pub type PgPool<T> = Pool<PgConnFactory<T>>;
+
 pub struct PgConnFactory<T>
 where
     T: MakeTlsConnect<Socket> + Clone + Send + Sync,
@@ -52,7 +54,7 @@ where
     }
 }
 
-pub fn connect<T>(config: Config, tls: T, pool_size: usize) -> Pool<PgConnFactory<T>>
+pub fn connect<T>(config: Config, tls: T, pool_size: usize) -> PgPool<T>
 where
     T: MakeTlsConnect<Socket> + Clone + Send + Sync,
     T::Stream: Send + Sync + 'static,
