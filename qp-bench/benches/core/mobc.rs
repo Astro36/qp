@@ -1,8 +1,9 @@
 use criterion::Bencher;
 use mobc::{async_trait, Manager, Pool};
 use std::convert::Infallible;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
+use tokio::time::sleep;
 
 pub struct IntManager;
 
@@ -32,6 +33,7 @@ pub fn bench_with_input(bencher: &mut Bencher, input: &(usize, usize)) {
                         let pool = pool.clone();
                         tokio::spawn(async move {
                             let int = pool.get().await.unwrap();
+                            sleep(Duration::from_millis(1)).await;
                             criterion::black_box(*int);
                         })
                     })
