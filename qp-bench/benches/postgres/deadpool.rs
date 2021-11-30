@@ -1,6 +1,6 @@
 use super::DB_URI;
 use criterion::Bencher;
-use deadpool_postgres::tokio_postgres::NoTls;
+use tokio_postgres::NoTls;
 use deadpool_postgres::{Manager, ManagerConfig, Pool};
 use futures::prelude::*;
 use std::time::Instant;

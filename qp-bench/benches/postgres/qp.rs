@@ -1,7 +1,7 @@
 use super::DB_URI;
 use criterion::Bencher;
 use futures::prelude::*;
-use qp_postgres::tokio_postgres::NoTls;
+use tokio_postgres::NoTls;
 use std::time::Instant;
 use tokio::runtime::Runtime;
 
