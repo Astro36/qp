@@ -24,23 +24,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout sources
-      uses: actions/checkout@v2
+      - name: Checkout sources
+        uses: actions/checkout@v2
 
-    - name: Cache crates
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('qp/Cargo.toml') }}
+      - name: Cache crates
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('qp/Cargo.toml') }}
 
-    - name: Run rustfmt
-      run: cargo fmt -p qp -- --check
+      - name: rustfmt
+        run: cargo fmt -p qp -- --check
 
-    - name: Run Clippy
-      run: cargo clippy -p qp -- -D warnings
+      - name: Clippy
+        run: cargo clippy -p qp -- -D warnings
 

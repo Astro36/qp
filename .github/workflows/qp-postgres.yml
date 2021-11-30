@@ -32,25 +32,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout sources
-      uses: actions/checkout@v2
+      - name: Checkout sources
+        uses: actions/checkout@v2
 
-    - name: Cache crates
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('qp-postgres/Cargo.toml') }}
+      - name: Cache crates
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('qp-postgres/Cargo.toml') }}
 
-    - name: Run rustfmt
-      run: cargo fmt -p qp-postgres -- --check
+      - name: rustfmt
+        run: cargo fmt -p qp-postgres -- --check
 
-    - name: Run Clippy
-      run: cargo clippy -p qp-postgres -- -D warnings
+      - name: Clippy
+        run: cargo clippy -p qp-postgres -- -D warnings
 
   test:
     name: Test
@@ -70,20 +70,20 @@ jobs:
           - 5432:5432
 
     steps:
-    - name: Checkout sources
-      uses: actions/checkout@v2
+      - name: Checkout sources
+        uses: actions/checkout@v2
 
-    - name: Cache crates
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('qp-postgres/Cargo.toml') }}
+      - name: Cache crates
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('qp-postgres/Cargo.toml') }}
 
-    - name: Test sources
-      run: cargo test -p qp-postgres
+      - name: Unit test
+        run: cargo test -p qp-postgres
 

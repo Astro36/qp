@@ -1,0 +1,27 @@
+name: Quick Pool Benchmark
+
+on: workflow_dispatch
+
+jobs:
+  benchmark:
+    name: Benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Cache crates
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('qp-bench/Cargo.toml') }}
+
+      - name: Benchmark
+        run: cargo bench -p qp-bench
+
