@@ -2,12 +2,26 @@
 
 > Rust Async Resource Pool
 
-[![Rust](https://img.shields.io/badge/rust-2021-black.svg?logo=rust&logoColor=white&style=for-the-badge)](https://doc.rust-lang.org/edition-guide/rust-2021/index.html)
-[![Tokio](https://img.shields.io/badge/tokio-black.svg?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTA4Ij48ZyBmaWxsPSIjZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0yOS44OTMgNjguNzk0bC0xLjY4Ny45NzQgMiAzLjQ2NCAxLjY4Ny0uOTc0IDEyLjIxNC03LjA1MiAxLjY4Ny0uOTc0LTItMy40NjQtMS42ODcuOTc0ek04OC4xMDcgNzIuMjU4bDEuNjg3Ljk3NCAyLTMuNDY0LTEuNjg3LS45NzQtMTIuMjE0LTcuMDUyLTEuNjg3LS45NzQtMiAzLjQ2NCAxLjY4Ny45NzR6Ii8+PHBhdGggZD0iTTgwIDU0YzAtMTEuMDQ2LTguOTU0LTIwLTIwLTIwcy0yMCA4Ljk1NC0yMCAyMCA4Ljk1NCAyMCAyMCAyMCAyMC04Ljk1NCAyMC0yMHptLTM1Ljc2NyAwYzAtOC43MDggNy4wNTktMTUuNzY3IDE1Ljc2Ny0xNS43NjcgOC43MDggMCAxNS43NjcgNy4wNTkgMTUuNzY3IDE1Ljc2NyAwIDguNzA4LTcuMDU5IDE1Ljc2Ny0xNS43NjcgMTUuNzY3LTguNzA4IDAtMTUuNzY3LTcuMDU5LTE1Ljc2Ny0xNS43Njd6Ii8+PGNpcmNsZSBjeD0iMjQiIGN5PSI3NSIgcj0iMyIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iOTYiIHI9IjMiLz48Y2lyY2xlIGN4PSI2MCIgY3k9IjEyIiByPSIzIi8+PGNpcmNsZSBjeD0iOTYiIGN5PSIzMyIgcj0iMyIvPjxjaXJjbGUgY3g9IjI0IiBjeT0iMzMiIHI9IjMiLz48Y2lyY2xlIGN4PSI5NiIgY3k9Ijc1IiByPSIzIi8+PGNpcmNsZSBjeD0iNjAiIGN5PSI1NCIgcj0iMyIvPjxwYXRoIGQ9Ik0yIDUySDB2NGg0MnYtNGgtMnpNODAgNTJoLTJ2NGg0MnYtNGgtMnpNNzIuODMgNzAuMzg5bC0xLjAwNy0xLjcyOS0zLjQ1NiAyLjAxNCAxLjAwNyAxLjcyOCAxOS4xMjggMzIuODM1IDEuMDA3IDEuNzI4IDMuNDU2LTIuMDE0LTEuMDA3LTEuNzI4ek0zMi41ODEgMi4xNEwzMS41NzUuNDEybC0zLjQ1NyAyLjAxMyAxLjAwNyAxLjcyOSAxOS4xMjggMzIuODM0IDEuMDA3IDEuNzI4IDMuNDU2LTIuMDEzLTEuMDA2LTEuNzI4ek05MC43MSA0LjE1NGwxLjAwNi0xLjcyOUw4OC4yNi40MTIgODcuMjUzIDIuMTQgNjguMTI1IDM0Ljk3NWwtMS4wMDcgMS43MjggMy40NTcgMi4wMTMgMS4wMDYtMS43Mjh6TTUwLjgyNyA3Mi41OTdsMS4wMDYtMS43MjgtMy40NTYtMi4wMTQtMS4wMDcgMS43MjgtMTkuMTI4IDMyLjgzNS0xLjAwNyAxLjcyOCAzLjQ1NyAyLjAxNCAxLjAwNi0xLjcyOHpNNTggODcuMDE3Vjg5aDRWNzFoLTR2MS45ODN6TTU4IDM1LjA1MlYzN2g0VjE5aC00djEuOTQ4ek00Mi4xMDcgNDYuMjU4bDEuNjg3Ljk3NCAyLTMuNDY0LTEuNjg3LS45NzQtMTIuMjE0LTcuMDUyLTEuNjg3LS45NzQtMiAzLjQ2NCAxLjY4Ny45NzR6TTc1Ljg5MyA0Mi43OTRsLTEuNjg3Ljk3NCAyIDMuNDY0IDEuNjg3LS45NzQgMTIuMjE0LTcuMDUyIDEuNjg3LS45NzQtMi0zLjQ2NC0xLjY4Ny45NzR6Ii8+PC9nPjwvc3ZnPg==&style=for-the-badge)](https://tokio.rs/)
-[![GitHub Workflow](https://img.shields.io/github/workflow/status/Astro36/qp/Rust?logo=github&logoColor=white&style=for-the-badge)](https://github.com/Astro36/qp/actions)
-[![License](https://img.shields.io/github/license/Astro36/qp?style=for-the-badge)](./LICENSE) 
+[![Crates.io](https://img.shields.io/crates/v/qp?style=for-the-badge)](https://crates.io/crates/qp)
+[![Docs.rs](https://img.shields.io/docsrs/qp?style=for-the-badge)](https://docs.rs/qp)
+[![Rust](https://img.shields.io/badge/rust-2021-black.svg?style=for-the-badge)](https://doc.rust-lang.org/edition-guide/rust-2021/index.html)
+[![Rust](https://img.shields.io/badge/rustc->=1.56-black.svg?style=for-the-badge)](https://blog.rust-lang.org/2021/10/21/Rust-1.56.0.html)
+[![GitHub Workflow](https://img.shields.io/github/workflow/status/Astro36/qp/Quick%20Pool?style=for-the-badge)](https://github.com/Astro36/qp/actions/workflows/qp.yml)
+[![Crates.io](https://img.shields.io/crates/d/qp?style=for-the-badge)](https://crates.io/crates/qp)
+[![License](https://img.shields.io/crates/l/qp?style=for-the-badge)](./LICENSE) 
 
 ## Usage
+
+### DBCP
+
+| Database     | Backend          | Adapter       | Version                |
+| ------------ | ---------------- | ------------- | ---------------------- |
+| [PostgreSQL] | [tokio-postgres] | [qp-postgres] | ![qp-postgres-version] |
+
+[PostgreSQL]: https://www.postgresql.org/
+[tokio-postgres]: https://crates.io/crates/tokio-postgres
+[qp-postgres]: https://crates.io/crates/qp-postgres
+[qp-postgres-version]: https://img.shields.io/crates/v/qp-postgres?style=for-the-badge
 
 ### Example
 
@@ -67,6 +81,29 @@ async fn main() {
     // `_int` will be auto released by `Pooled` destructor.
 }
 ```
+
+## Alternatives
+
+### Performance Comparison
+
+| [bb8]        | [deadpool]        |
+| ------------ | ----------------- |
+| ![bb8-bench] | ![deadpool-bench] |
+
+| [mobc]        | [qp]        |
+| ------------- | ----------- |
+| ![mobc-bench] | ![qp-bench] |
+
+[bb8]: https://crates.io/crates/bb8
+[deadpool]: https://crates.io/crates/deadpool
+[mobc]: https://crates.io/crates/mobc
+[qp]: https://crates.io/crates/qp
+[bb8-bench]: https://astro36.github.io/qp/core/bb8/pool=16%20worker=64/report/pdf.svg
+[deadpool-bench]: https://astro36.github.io/qp/core/deadpool/pool=16%20worker=64/report/pdf.svg
+[mobc-bench]: https://astro36.github.io/qp/core/mobc/pool=16%20worker=64/report/pdf.svg
+[qp-bench]: https://astro36.github.io/qp/core/qp/pool=16%20worker=64/report/pdf.svg
+
+For more information, see [Quick Pool Benchmark](./qp-bench/README.md).
 
 ## License
 
