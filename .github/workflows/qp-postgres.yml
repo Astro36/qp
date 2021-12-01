@@ -6,22 +6,22 @@ on:
       - main
     paths:
       - '.github/workflows/qp-postgres.yml'
-      - 'qp-postgres/src'
-      - 'qp-postgres/tests'
+      - 'qp-postgres/src/**'
+      - 'qp-postgres/tests/**'
       - 'qp-postgres/Cargo.toml'
-      - 'qp/src'
-      - 'qp/tests'
+      - 'qp/src/**'
+      - 'qp/tests/**'
       - 'qp/Cargo.toml'
   push:
     branches:
       - main
     paths:
       - '.github/workflows/qp-postgres.yml'
-      - 'qp-postgres/src'
-      - 'qp-postgres/tests'
+      - 'qp-postgres/src/**'
+      - 'qp-postgres/tests/**'
       - 'qp-postgres/Cargo.toml'
-      - 'qp/src'
-      - 'qp/tests'
+      - 'qp/src/**'
+      - 'qp/tests/**'
       - 'qp/Cargo.toml'
 
 jobs:
@@ -33,6 +33,9 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v2
 
+      - name: Generate lockfile
+        run: cargo update
+
       - name: Cache crates
         uses: actions/cache@v2
         with:
@@ -42,7 +45,8 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('qp-postgres/Cargo.toml') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
 
       - name: rustfmt
         run: cargo fmt -p qp-postgres -- --check

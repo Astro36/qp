@@ -10,6 +10,7 @@ repository = "https://github.com/Astro36/qp"
 license = "MIT"
 keywords = ["async", "resource", "pool", "tokio", "benchmark"]
 categories = ["asynchronous", "data-structures"]
+publish = false
 
 [dependencies]
 async-trait = "0.1.51"

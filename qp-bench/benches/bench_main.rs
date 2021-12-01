@@ -6,7 +6,7 @@ pub mod postgres;
 
 macro_rules! benchmark_id {
     ($fn_name:expr, $pool_size:expr, $workers:expr) => {
-        BenchmarkId::new($fn_name, format!("pool={} worker={}", $pool_size, $workers))
+        BenchmarkId::new($fn_name, format!("pool={:02} worker={:02}", $pool_size, $workers))
     };
 }
 
@@ -23,8 +23,9 @@ fn product(a: Vec<usize>, b: Vec<usize>) -> Vec<(usize, usize)> {
 pub fn bench_core(c: &mut Criterion) {
     let mut group = c.benchmark_group("core");
     group
-        .measurement_time(Duration::from_secs(3))
+        .measurement_time(Duration::from_secs(1))
         .nresamples(10_000)
+        .sample_size(50)
         .warm_up_time(Duration::from_millis(100));
     let inputs = product(vec![4usize, 8, 16], vec![1usize, 4, 16, 64]);
     for input in inputs {
@@ -56,15 +57,16 @@ pub fn bench_postgres(c: &mut Criterion) {
     let mut group = c.benchmark_group("postgres");
     group
         .measurement_time(Duration::from_secs(3))
-        .nresamples(10_000)
+        .nresamples(1_000)
+        .sample_size(50)
         .warm_up_time(Duration::from_millis(100));
     let inputs = product(vec![4usize, 8, 16], vec![1usize, 4, 16, 64]);
     for input in inputs {
-        group.bench_with_input(
+        /*group.bench_with_input(
             benchmark_id!("bb8", input.0, input.1),
             &input,
             postgres::bb8::bench_with_input,
-        );
+        );*/
         group.bench_with_input(
             benchmark_id!("deadpool", input.0, input.1),
             &input,

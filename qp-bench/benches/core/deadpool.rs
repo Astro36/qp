@@ -37,7 +37,7 @@ pub fn bench_with_input(bencher: &mut Bencher, input: &(usize, usize)) {
                         let pool = pool.clone();
                         tokio::spawn(async move {
                             let int = pool.get().await.unwrap();
-                            sleep(Duration::from_millis(1)).await;
+                            sleep(Duration::from_millis(0)).await;
                             criterion::black_box(*int);
                         })
                     })
