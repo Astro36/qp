@@ -1,11 +1,10 @@
 [package]
 name = "qp"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Seungjae Park <astro.psj@gmail.com>"]
 edition = "2021"
 rust-version = "1.56"
 description = "Rust Async Resource Pool"
-documentation = "https://docs.rs/qp"
 repository = "https://github.com/Astro36/qp"
 license = "MIT"
 keywords = ["async", "resource", "pool", "tokio"]
@@ -13,7 +12,7 @@ categories = ["asynchronous", "data-structures"]
 
 [dependencies]
 async-trait = "0.1.51"
-futures = "0.3.18"
+futures-util = "0.3.18"
 parking_lot = "0.11.2"
 thiserror = "1.0.30"
 tokio = { version = "1.14.0", features = ["sync"] }

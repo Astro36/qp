@@ -1,6 +1,6 @@
 use crate::error::{Error, Result};
 use crate::resource::Factory;
-use futures::future::TryFutureExt;
+use futures_util::future::TryFutureExt;
 use parking_lot::Mutex;
 use std::collections::VecDeque;
 use std::ops::{Deref, DerefMut};
