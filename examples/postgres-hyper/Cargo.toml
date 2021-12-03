@@ -1,0 +1,17 @@
+[package]
+name = "qp-postgres-hyper-example"
+version = "0.1.0"
+authors = ["Seungjae Park <astro.psj@gmail.com>"]
+edition = "2021"
+rust-version = "1.56"
+description = "Rust Async Resource Pool PostgreSQL Adapter Hyper Example"
+repository = "https://github.com/Astro36/qp"
+license = "MIT"
+keywords = ["async", "database", "pool", "hyper", "postgres"]
+categories = ["asynchronous", "database", "data-structures", "network-programming", "web-programming::http-server"]
+publish = false
+
+[dependencies]
+hyper = { version = "0.14.15", features = ["full"] }
+qp-postgres = { path = "../../qp-postgres", version = "0.1.0" }
+tokio = { version = "1.14.0", features = ["full"] }
