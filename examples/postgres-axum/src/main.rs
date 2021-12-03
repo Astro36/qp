@@ -6,6 +6,9 @@ use qp_postgres::tokio_postgres::NoTls;
 use qp_postgres::PgPool;
 use serde::Deserialize;
 
+const DB_URI: &str = "postgresql://postgres:postgres@localhost";
+const SERVER_ADDRESS: &str = "0.0.0.0:3000";
+
 type DbPool = PgPool<NoTls>;
 
 #[derive(Debug, Deserialize)]
@@ -14,7 +17,7 @@ struct NumberAB {
     b: i32,
 }
 
-async fn add(
+async fn add_number(
     Extension(pool): Extension<DbPool>,
     Query(num): Query<NumberAB>,
 ) -> Result<String, StatusCode> {
@@ -36,12 +39,12 @@ async fn add(
 
 #[tokio::main]
 async fn main() {
-    let config = "postgresql://postgres:postgres@localhost".parse().unwrap();
+    let config = DB_URI.parse().unwrap();
     let pool = qp_postgres::connect(config, NoTls, 8);
     let app = Router::new()
-        .route("/", get(add))
+        .route("/", get(add_number))
         .layer(AddExtensionLayer::new(pool));
-    let addr = "0.0.0.0:3000".parse().unwrap();
+    let addr = SERVER_ADDRESS.parse().unwrap();
     Server::bind(&addr)
         .serve(app.into_make_service())
         .await

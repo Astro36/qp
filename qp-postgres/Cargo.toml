@@ -5,7 +5,6 @@ authors = ["Seungjae Park <astro.psj@gmail.com>"]
 edition = "2021"
 rust-version = "1.56"
 description = "Rust Async Resource Pool PostgreSQL Adapter"
-documentation = "https://docs.rs/qp-postgres"
 repository = "https://github.com/Astro36/qp"
 license = "MIT"
 keywords = ["async", "database", "pool", "tokio", "postgres"]

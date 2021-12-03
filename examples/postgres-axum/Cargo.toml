@@ -13,8 +13,6 @@ publish = false
 
 [dependencies]
 axum = "0.3.4"
+qp-postgres = { path = "../../qp-postgres", version = "0.1.0" }
 serde = { version = "1.0.130", features = ["derive"] }
-qp-postgres = { path = "../../", version = "0.1.0" }
 tokio = { version = "1.14.0", features = ["full"] }
-
-[workspace]
