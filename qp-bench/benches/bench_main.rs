@@ -6,7 +6,10 @@ pub mod postgres;
 
 macro_rules! benchmark_id {
     ($fn_name:expr, $pool_size:expr, $workers:expr) => {
-        BenchmarkId::new($fn_name, format!("pool={:02} worker={:02}", $pool_size, $workers))
+        BenchmarkId::new(
+            $fn_name,
+            format!("pool={:02} worker={:02}", $pool_size, $workers),
+        )
     };
 }
 

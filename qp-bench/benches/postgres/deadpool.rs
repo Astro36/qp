@@ -1,10 +1,10 @@
 use super::DB_URI;
 use criterion::Bencher;
-use tokio_postgres::NoTls;
 use deadpool_postgres::{Manager, ManagerConfig, Pool};
 use futures::prelude::*;
 use std::time::Instant;
 use tokio::runtime::Runtime;
+use tokio_postgres::NoTls;
 
 pub fn bench_with_input(bencher: &mut Bencher, input: &(usize, usize)) {
     bencher

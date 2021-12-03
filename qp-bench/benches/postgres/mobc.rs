@@ -2,10 +2,10 @@ use super::DB_URI;
 use criterion::Bencher;
 use futures::prelude::*;
 use mobc::Pool;
-use tokio_postgres::NoTls;
 use mobc_postgres::PgConnectionManager;
 use std::time::Instant;
 use tokio::runtime::Runtime;
+use tokio_postgres::NoTls;
 
 pub fn bench_with_input(bencher: &mut Bencher, input: &(usize, usize)) {
     bencher
