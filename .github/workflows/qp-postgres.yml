@@ -85,6 +85,7 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('qp-postgres/Cargo.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-
 
       - name: Unit test
         run: cargo test -p qp-postgres
