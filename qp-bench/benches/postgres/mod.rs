@@ -3,5 +3,6 @@ pub mod deadpool;
 pub mod mobc;
 pub mod qp;
 pub mod r2d2;
+pub mod sqlx;
 
 pub const DB_URI: &'static str = "postgresql://postgres:postgres@localhost";

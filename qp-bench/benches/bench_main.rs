@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
 use std::time::Duration;
 
 pub mod core;
@@ -24,14 +24,14 @@ fn product(a: Vec<usize>, b: Vec<usize>) -> Vec<(usize, usize)> {
 }
 
 pub fn bench_core(c: &mut Criterion) {
-    dbg!(core::factorial(20));
+    c.bench_function("loop factorial 20", |b| b.iter(core::loop_factorial20));
     let mut group = c.benchmark_group("core");
     group
         .measurement_time(Duration::from_secs(1))
         .nresamples(10_000)
         .sample_size(25)
+        .sampling_mode(SamplingMode::Flat)
         .warm_up_time(Duration::from_millis(100));
-    group.bench_function("loop factorial 20", |b| b.iter(core::loop_factorial20));
     let inputs = product(vec![4usize, 8, 16], vec![1usize, 4, 16, 64]);
     for input in inputs {
         group.bench_with_input(
@@ -67,8 +67,9 @@ pub fn bench_postgres(c: &mut Criterion) {
     let mut group = c.benchmark_group("postgres");
     group
         .measurement_time(Duration::from_secs(3))
-        .nresamples(1_000)
+        .nresamples(10_000)
         .sample_size(25)
+        .sampling_mode(SamplingMode::Flat)
         .warm_up_time(Duration::from_millis(100));
     let inputs = product(vec![4usize, 8, 16], vec![1usize, 4, 16, 64]);
     for input in inputs {
@@ -96,6 +97,11 @@ pub fn bench_postgres(c: &mut Criterion) {
             benchmark_id!("r2d2", input.0, input.1),
             &input,
             postgres::r2d2::bench_with_input,
+        );
+        group.bench_with_input(
+            benchmark_id!("sqlx", input.0, input.1),
+            &input,
+            postgres::sqlx::bench_with_input,
         );
     }
     group.finish();
