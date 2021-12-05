@@ -9,9 +9,6 @@ pub enum Error {
     #[error("attempted to acquire a resource on a closed pool")]
     PoolClosed,
 
-    #[error("pool timed out while waiting for a resource")]
-    PoolTimedOut,
-
     #[error("error returned from a resource")]
     Resource(#[source] BoxDynError),
 }

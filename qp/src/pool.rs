@@ -1,6 +1,5 @@
 use crate::error::{Error, Result};
 use crate::resource::Factory;
-use futures_util::future::TryFutureExt;
 use parking_lot::Mutex;
 use std::collections::VecDeque;
 use std::ops::{Deref, DerefMut};
@@ -74,8 +73,8 @@ impl<F: Factory> Inner<F> {
         // A `Semaphore::acquire` can only fail if the semaphore has been closed.
         self.semaphore
             .acquire()
-            .map_err(|_| Error::PoolClosed)
-            .await?
+            .await
+            .map_err(|_| Error::PoolClosed)?
             .forget();
         Ok(Pooled {
             pool: self,
@@ -95,8 +94,8 @@ impl<F: Factory> Inner<F> {
         }
         self.factory
             .try_create()
-            .map_err(|e| Error::Resource(Box::new(e)))
             .await
+            .map_err(|e| Error::Resource(Box::new(e)))
     }
 
     fn push_resource(&self, resource: F::Output) {
