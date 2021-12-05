@@ -1,11 +1,11 @@
+use super::loop_factorial20;
 use async_trait::async_trait;
 use criterion::Bencher;
 use deadpool::managed::{Manager, Pool, RecycleResult};
 use futures::prelude::*;
 use std::convert::Infallible;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tokio::runtime::Runtime;
-use tokio::time::sleep;
 
 pub struct IntManager;
 
@@ -37,7 +37,7 @@ pub fn bench_with_input(bencher: &mut Bencher, input: &(usize, usize)) {
                         let pool = pool.clone();
                         tokio::spawn(async move {
                             let int = pool.get().await.unwrap();
-                            sleep(Duration::from_millis(0)).await;
+                            loop_factorial20();
                             criterion::black_box(*int);
                         })
                     })

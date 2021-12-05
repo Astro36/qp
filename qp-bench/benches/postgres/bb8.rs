@@ -12,7 +12,11 @@ pub fn bench_with_input(bencher: &mut Bencher, input: &(usize, usize)) {
         .to_async(Runtime::new().unwrap())
         .iter_custom(|iters| async move {
             let manager = PostgresConnectionManager::new_from_stringlike(DB_URI, NoTls).unwrap();
-            let pool = Pool::builder().build(manager).await.unwrap();
+            let pool = Pool::builder()
+                .max_size(input.0 as u32)
+                .build(manager)
+                .await
+                .unwrap();
             drop(future::join_all((0..input.0).map(|_| pool.get())).await);
             let start = Instant::now();
             for _ in 0..iters {
