@@ -10,7 +10,6 @@ on:
       - 'qp-postgres/tests/**'
       - 'qp-postgres/Cargo.toml'
       - 'qp/src/**'
-      - 'qp/tests/**'
       - 'qp/Cargo.toml'
   push:
     branches:
@@ -21,7 +20,6 @@ on:
       - 'qp-postgres/tests/**'
       - 'qp-postgres/Cargo.toml'
       - 'qp/src/**'
-      - 'qp/tests/**'
       - 'qp/Cargo.toml'
 
 jobs:
@@ -75,6 +73,9 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v2
 
+      - name: Generate lockfile
+        run: cargo update
+
       - name: Cache crates
         uses: actions/cache@v2
         with:
@@ -84,9 +85,8 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('qp-postgres/Cargo.toml') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
-      - name: Unit test
+      - name: Test
         run: cargo test -p qp-postgres
-
