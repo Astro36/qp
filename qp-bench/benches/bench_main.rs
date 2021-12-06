@@ -27,9 +27,9 @@ pub fn bench_core(c: &mut Criterion) {
     c.bench_function("loop factorial 20", |b| b.iter(core::loop_factorial20));
     let mut group = c.benchmark_group("core");
     group
-        .measurement_time(Duration::from_secs(1))
+        .measurement_time(Duration::from_secs(5))
         .nresamples(10_000)
-        .sample_size(25)
+        .sample_size(100)
         .sampling_mode(SamplingMode::Flat)
         .warm_up_time(Duration::from_millis(100));
     let inputs = product(vec![4usize, 8, 16], vec![1usize, 4, 16, 64]);
@@ -66,9 +66,9 @@ pub fn bench_core(c: &mut Criterion) {
 pub fn bench_postgres(c: &mut Criterion) {
     let mut group = c.benchmark_group("postgres");
     group
-        .measurement_time(Duration::from_secs(3))
+        .measurement_time(Duration::from_secs(10))
         .nresamples(10_000)
-        .sample_size(25)
+        .sample_size(100)
         .sampling_mode(SamplingMode::Flat)
         .warm_up_time(Duration::from_millis(100));
     let inputs = product(vec![4usize, 8, 16], vec![1usize, 4, 16, 64]);
