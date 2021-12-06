@@ -73,8 +73,8 @@ mod tests {
     async fn test_connect() {
         let config = "postgresql://postgres:postgres@localhost".parse().unwrap();
         let pool = connect(config, NoTls, 1);
-        let conn = pool.acquire().await.unwrap();
-        let row = conn.query_one("SELECT 1", &[]).await.unwrap();
+        let client = pool.acquire().await.unwrap();
+        let row = client.query_one("SELECT 1", &[]).await.unwrap();
         let value: i32 = row.get(0);
         assert_eq!(value, 1);
     }
