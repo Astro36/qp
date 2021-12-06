@@ -14,6 +14,8 @@
 
 ### Example
 
+#### Simple Query
+
 ```rust
 use tokio_postgres::NoTls;
 
@@ -27,6 +29,11 @@ async fn main() {
     dbg!(&int);
 }
 ```
+
+#### Web Frameworks
+
+- [`qp-postgres` + `axum`](../examples/postgres-axum)
+- [`qp-postgres` + `hyper`](../examples/postgres-hyper)
 
 ## Alternatives
 
@@ -42,7 +49,7 @@ async fn main() {
 
 <table>
 <tr>
-<th colspan="2"><img src="https://astro36.github.io/qp/postgres/pool=16%20worker=64/report/violin.svg" alt="total"></th>
+<td colspan="2"><img src="https://astro36.github.io/qp/postgres/pool=16%20worker=64/report/violin.svg" alt="total"></td>
 </tr>
 <tr>
 <td><code>bb8-postgres</code> has timeout issue</td>
