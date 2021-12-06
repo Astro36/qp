@@ -32,8 +32,8 @@ async fn main() {
 
 #### Web Frameworks
 
-- [`qp-postgres` + `axum`](../examples/postgres-axum)
-- [`qp-postgres` + `hyper`](../examples/postgres-hyper)
+- [`qp-postgres` + `axum`](/examples/postgres-axum)
+- [`qp-postgres` + `hyper`](/examples/postgres-hyper)
 
 ## Alternatives
 
@@ -65,7 +65,9 @@ async fn main() {
 </tr>
 </table>
 
-For more information, see [Quick Pool Benchmark](./qp-bench/README.md).
+> Benchmarked on [GitHub Action: Ubuntu 20.04, CPU 2 Core, RAM 7GB](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources)
+
+For more information, see [Quick Pool Benchmark](/qp-bench/README.md).
 
 ## License
 
@@ -91,7 +93,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-*Quick Pool for PostgreSQL* is licensed under the [MIT License](./LICENSE).
+*Quick Pool for PostgreSQL* is licensed under the [MIT License](/qp-postgres/LICENSE).
 
 [tokio-postgres]: https://crates.io/crates/tokio-postgres
 [postgres]: https://crates.io/crates/postgres
