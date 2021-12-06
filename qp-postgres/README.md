@@ -5,7 +5,7 @@
 [![Crates.io](https://img.shields.io/crates/v/qp-postgres?style=for-the-badge)](https://crates.io/crates/qp-postgres)
 [![Docs.rs](https://img.shields.io/docsrs/qp-postgres?style=for-the-badge)](https://docs.rs/qp-postgres)
 [![Rust](https://img.shields.io/badge/rust-2021-black.svg?style=for-the-badge)](https://doc.rust-lang.org/edition-guide/rust-2021/index.html)
-[![Rust](https://img.shields.io/badge/rustc->=1.56-black.svg?style=for-the-badge)](https://blog.rust-lang.org/2021/10/21/Rust-1.56.0.html)
+[![Rust](https://img.shields.io/badge/rustc-1.56+-black.svg?style=for-the-badge)](https://blog.rust-lang.org/2021/10/21/Rust-1.56.0.html)
 [![GitHub Workflow](https://img.shields.io/github/workflow/status/Astro36/qp/Quick%20Pool%20for%20PostgreSQL?style=for-the-badge)](https://github.com/Astro36/qp/actions/workflows/qp-postgres.yml)
 [![Crates.io](https://img.shields.io/crates/d/qp-postgres?style=for-the-badge)](https://crates.io/crates/qp-postgres)
 [![License](https://img.shields.io/crates/l/qp-postgres?style=for-the-badge)](./LICENSE) 
@@ -35,22 +35,28 @@ async fn main() {
 | [tokio-postgres] | [bb8-postgres]      | ![bb8-postgres-version]      |
 | [tokio-postgres] | [deadpool-postgres] | ![deadpool-postgres-version] |
 | [tokio-postgres] | [mobc-postgres]     | ![mobc-postgres-version]     |
-| [tokio-postgres] | [qp-postgres]       | ![qp-postgres-version]       |
 | [postgres]       | [r2d2-postgres]     | ![r2d2-postgres-version]     |
+| [sqlx]           | -                   | ![sqlx-version]              |
 
 ### Performance Comparison
 
-| [bb8-postgres] | [deadpool-postgres] |
-| -------------- | ------------------- |
-| Timeout issue  | ![deadpool-bench]   |
-
-| [mobc-postgres] | [qp-postgres] |
-| --------------- | ------------- |
-| ![mobc-bench]   | ![qp-bench]   |
-
-| [r2d2-postgres] |
-| --------------- |
-| ![r2d2-bench]   |
+<table>
+<tr>
+<th colspan="2"><img src="https://astro36.github.io/qp/postgres/pool=16%20worker=64/report/violin.svg" alt="total"></th>
+</tr>
+<tr>
+<td><code>bb8-postgres</code> has timeout issue</td>
+<td><img src="https://astro36.github.io/qp/postgres/deadpool/pool=16%20worker=64/report/pdf.svg" alt="deadpool-postgres"></td>
+</tr>
+<tr>
+<td><img src="https://astro36.github.io/qp/postgres/mobc/pool=16%20worker=64/report/pdf.svg" alt="mobc-postgres"></td>
+<td><img src="https://astro36.github.io/qp/postgres/qp/pool=16%20worker=64/report/pdf.svg" alt="qp-postgres"></td>
+</tr>
+<tr>
+<td><img src="https://astro36.github.io/qp/postgres/r2d2/pool=16%20worker=64/report/pdf.svg" alt="r2d2-postgres"></td>
+<td><img src="https://astro36.github.io/qp/postgres/sqlx/pool=16%20worker=64/report/pdf.svg" alt="sqlx"></td>
+</tr>
+</table>
 
 For more information, see [Quick Pool Benchmark](./qp-bench/README.md).
 
@@ -82,6 +88,7 @@ SOFTWARE.
 
 [tokio-postgres]: https://crates.io/crates/tokio-postgres
 [postgres]: https://crates.io/crates/postgres
+[sqlx]: https://crates.io/crates/sqlx
 
 [bb8-postgres]: https://crates.io/crates/bb8-postgres
 [deadpool-postgres]: https://crates.io/crates/deadpool-postgres
@@ -94,8 +101,4 @@ SOFTWARE.
 [mobc-postgres-version]: https://img.shields.io/crates/v/mobc-postgres?style=for-the-badge
 [qp-postgres-version]: https://img.shields.io/crates/v/qp-postgres?style=for-the-badge
 [r2d2-postgres-version]: https://img.shields.io/crates/v/r2d2-postgres?style=for-the-badge
-
-[deadpool-bench]: https://astro36.github.io/qp/postgres/deadpool/pool=16%20worker=64/report/pdf.svg
-[mobc-bench]: https://astro36.github.io/qp/postgres/mobc/pool=16%20worker=64/report/pdf.svg
-[qp-bench]: https://astro36.github.io/qp/postgres/qp/pool=16%20worker=64/report/pdf.svg
-[r2d2-bench]: https://astro36.github.io/qp/postgres/r2d2/pool=16%20worker=64/report/pdf.svg
+[sqlx-version]: https://img.shields.io/crates/v/sqlx?style=for-the-badge
