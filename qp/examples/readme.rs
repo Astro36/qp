@@ -27,6 +27,7 @@ async fn main() {
     let mut int = pool.acquire().await.unwrap();
     *int = 1;
     dbg!(*int); // 1
+    dbg!(int.is_valid().await); // true; validate the resource.
 
     // release the resource and put it back to the pool.
     drop(int);
@@ -39,6 +40,7 @@ async fn main() {
     let mut int = pool.acquire().await.unwrap();
     dbg!(*int); // 100
     *int = -1; // the resource will be disposed because `validate` is false.
+    dbg!(int.is_valid().await); // false
     drop(int);
 
     let int = pool.acquire().await.unwrap();

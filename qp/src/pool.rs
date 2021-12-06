@@ -34,6 +34,12 @@ impl<F: Factory> Drop for Pooled<'_, F> {
     }
 }
 
+impl<F: Factory> Pooled<'_, F> {
+    pub async fn is_valid(&self) -> bool {
+        self.pool.get_factory().validate(self).await
+    }
+}
+
 pub struct Pool<F: Factory> {
     inner: Arc<Inner<F>>,
 }
@@ -60,6 +66,10 @@ impl<F: Factory> Pool<F> {
     pub async fn acquire(&self) -> Result<Pooled<'_, F>> {
         self.inner.acquire().await
     }
+
+    pub fn get_factory(&self) -> &F {
+        self.inner.get_factory()
+    }
 }
 
 struct Inner<F: Factory> {
@@ -80,6 +90,10 @@ impl<F: Factory> Inner<F> {
             pool: self,
             resource: Some(self.pop_or_create_resource().await?),
         })
+    }
+
+    pub fn get_factory(&self) -> &F {
+        &self.factory
     }
 
     fn pop_resource(&self) -> Option<F::Output> {
