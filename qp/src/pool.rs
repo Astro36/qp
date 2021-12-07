@@ -67,6 +67,10 @@ impl<F: Factory> Pool<F> {
         self.inner.acquire().await
     }
 
+    pub async fn acquire_unchecked(&self) -> Result<Pooled<'_, F>> {
+        self.inner.acquire_unchecked().await
+    }
+
     pub fn get_factory(&self) -> &F {
         self.inner.get_factory()
     }
@@ -92,6 +96,18 @@ impl<F: Factory> Inner<F> {
         })
     }
 
+    pub async fn acquire_unchecked(&self) -> Result<Pooled<'_, F>> {
+        self.semaphore
+            .acquire()
+            .await
+            .map_err(|_| Error::PoolClosed)?
+            .forget();
+        Ok(Pooled {
+            pool: self,
+            resource: Some(self.pop_or_create_resource_unchecked().await?),
+        })
+    }
+
     pub fn get_factory(&self) -> &F {
         &self.factory
     }
@@ -110,6 +126,17 @@ impl<F: Factory> Inner<F> {
             .try_create()
             .await
             .map_err(|e| Error::Resource(Box::new(e)))
+    }
+
+    async fn pop_or_create_resource_unchecked(&self) -> Result<F::Output> {
+        match self.pop_resource() {
+            Some(resource) => Ok(resource),
+            None => self
+                .factory
+                .try_create()
+                .await
+                .map_err(|e| Error::Resource(Box::new(e))),
+        }
     }
 
     fn push_resource(&self, resource: F::Output) {

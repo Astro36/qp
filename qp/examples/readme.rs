@@ -43,6 +43,10 @@ async fn main() {
     dbg!(int.is_valid().await); // false
     drop(int);
 
+    let int = pool.acquire_unchecked().await.unwrap();
+    dbg!(*int); // -1; no validation before acquiring.
+    drop(int);
+
     let int = pool.acquire().await.unwrap();
     dbg!(*int); // 0; old resource is disposed and create new one.
 
