@@ -9,7 +9,7 @@ pub fn factorial(n: i64) -> i64 {
 }
 
 pub fn loop_factorial20() {
-    for _ in 0..1_000_000 {
+    for _ in 0..1_000 {
         criterion::black_box(factorial(20));
     }
 }

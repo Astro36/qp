@@ -30,7 +30,7 @@ pub fn bench_core(c: &mut Criterion) {
         .measurement_time(Duration::from_secs(5))
         .nresamples(10_000)
         .sample_size(100)
-        .sampling_mode(SamplingMode::Flat)
+        .sampling_mode(SamplingMode::Linear)
         .warm_up_time(Duration::from_millis(100));
     let inputs = product(vec![4usize, 8, 16], vec![1usize, 4, 16, 64]);
     for input in inputs {
