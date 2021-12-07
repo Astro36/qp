@@ -5,7 +5,7 @@
 [![Crates.io](https://img.shields.io/crates/v/qp?style=for-the-badge)](https://crates.io/crates/qp)
 [![Docs.rs](https://img.shields.io/docsrs/qp?style=for-the-badge)](https://docs.rs/qp)
 [![Rust](https://img.shields.io/badge/rust-2021-black.svg?style=for-the-badge)](https://doc.rust-lang.org/edition-guide/rust-2021/index.html)
-[![Rust](https://img.shields.io/badge/rustc->=1.56-black.svg?style=for-the-badge)](https://blog.rust-lang.org/2021/10/21/Rust-1.56.0.html)
+[![Rust](https://img.shields.io/badge/rustc-1.56+-black.svg?style=for-the-badge)](https://blog.rust-lang.org/2021/10/21/Rust-1.56.0.html)
 [![GitHub Workflow](https://img.shields.io/github/workflow/status/Astro36/qp/Quick%20Pool?style=for-the-badge)](https://github.com/Astro36/qp/actions/workflows/qp.yml)
 [![Crates.io](https://img.shields.io/crates/d/qp?style=for-the-badge)](https://crates.io/crates/qp)
 [![License](https://img.shields.io/crates/l/qp?style=for-the-badge)](./LICENSE) 
@@ -17,11 +17,6 @@
 | Database     | Backend          | Adapter       | Version                |
 | ------------ | ---------------- | ------------- | ---------------------- |
 | [PostgreSQL] | [tokio-postgres] | [qp-postgres] | ![qp-postgres-version] |
-
-[PostgreSQL]: https://www.postgresql.org/
-[tokio-postgres]: https://crates.io/crates/tokio-postgres
-[qp-postgres]: https://crates.io/crates/qp-postgres
-[qp-postgres-version]: https://img.shields.io/crates/v/qp-postgres?style=for-the-badge
 
 ### Example
 
@@ -55,6 +50,7 @@ async fn main() {
     let mut int = pool.acquire().await.unwrap();
     *int = 1;
     dbg!(*int); // 1
+    dbg!(int.is_valid().await); // true; validate the resource.
 
     // release the resource and put it back to the pool.
     drop(int);
@@ -67,6 +63,11 @@ async fn main() {
     let mut int = pool.acquire().await.unwrap();
     dbg!(*int); // 100
     *int = -1; // the resource will be disposed because `validate` is false.
+    dbg!(int.is_valid().await); // false
+    drop(int);
+
+    let int = pool.acquire_unchecked().await.unwrap();
+    dbg!(*int); // -1; no validation before acquiring.
     drop(int);
 
     let int = pool.acquire().await.unwrap();
@@ -84,26 +85,36 @@ async fn main() {
 
 ## Alternatives
 
+| Crate      | Async Runtime                 | Version             |
+| ---------- | ----------------------------- | ------------------- |
+| [bb8]      | [tokio]                       | ![bb8-version]      |
+| [deadpool] | [async-std], [tokio]          | ![deadpool-version] |
+| [mobc]     | [actix], [async-std], [tokio] | ![mobc-version]     |
+| [r2d2]     | not supported                 | ![r2d2-version]     |
+
 ### Performance Comparison
 
-| [bb8]        | [deadpool]        |
-| ------------ | ----------------- |
-| ![bb8-bench] | ![deadpool-bench] |
+<table>
+<tr>
+<td colspan="2"><img src="https://astro36.github.io/qp/core/pool=16%20worker=64/report/violin.svg" alt="total"></td>
+</tr>
+<tr>
+<td><img src="https://astro36.github.io/qp/core/bb8/pool=16%20worker=64/report/pdf.svg" alt="bb8"></td>
+<td><img src="https://astro36.github.io/qp/core/deadpool/pool=16%20worker=64/report/pdf.svg" alt="deadpool"></td>
+</tr>
+<tr>
+<td><img src="https://astro36.github.io/qp/core/mobc/pool=16%20worker=64/report/pdf.svg" alt="mobc"></td>
+<td><img src="https://astro36.github.io/qp/core/qp/pool=16%20worker=64/report/pdf.svg" alt="qp"></td>
+</tr>
+<tr>
+<td><img src="https://astro36.github.io/qp/core/r2d2/pool=16%20worker=64/report/pdf.svg" alt="r2d2"></td>
+<td></td>
+</tr>
+</table>
 
-| [mobc]        | [qp]        |
-| ------------- | ----------- |
-| ![mobc-bench] | ![qp-bench] |
+> Benchmarked on [GitHub Action: Ubuntu 20.04, CPU 2 Core, RAM 7GB](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources)
 
-[bb8]: https://crates.io/crates/bb8
-[deadpool]: https://crates.io/crates/deadpool
-[mobc]: https://crates.io/crates/mobc
-[qp]: https://crates.io/crates/qp
-[bb8-bench]: https://astro36.github.io/qp/core/bb8/pool=16%20worker=64/report/pdf.svg
-[deadpool-bench]: https://astro36.github.io/qp/core/deadpool/pool=16%20worker=64/report/pdf.svg
-[mobc-bench]: https://astro36.github.io/qp/core/mobc/pool=16%20worker=64/report/pdf.svg
-[qp-bench]: https://astro36.github.io/qp/core/qp/pool=16%20worker=64/report/pdf.svg
-
-For more information, see [Quick Pool Benchmark](./qp-bench/README.md).
+For more information, see [Quick Pool Benchmark](/qp-bench/README.md).
 
 ## License
 
@@ -129,4 +140,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-Quick Pool is licensed under the [MIT License](./LICENSE).
+*Quick Pool* is licensed under the [MIT License](/qp/LICENSE).
+
+[PostgreSQL]: https://www.postgresql.org/
+[tokio-postgres]: https://crates.io/crates/tokio-postgres
+[qp-postgres]: https://crates.io/crates/qp-postgres
+[qp-postgres-version]: https://img.shields.io/crates/v/qp-postgres?style=for-the-badge
+
+[bb8]: https://crates.io/crates/bb8
+[deadpool]: https://crates.io/crates/deadpool
+[mobc]: https://crates.io/crates/mobc
+[qp]: https://crates.io/crates/qp
+[r2d2]: https://crates.io/crates/r2d2
+
+[actix]: https://crates.io/crates/actix
+[async-std]: https://crates.io/crates/async-std
+[tokio]: https://crates.io/crates/r2d2
+
+[bb8-version]: https://img.shields.io/crates/v/bb8?style=for-the-badge
+[deadpool-version]: https://img.shields.io/crates/v/deadpool?style=for-the-badge
+[mobc-version]: https://img.shields.io/crates/v/mobc?style=for-the-badge
+[qp-version]: https://img.shields.io/crates/v/qp?style=for-the-badge
+[r2d2-version]: https://img.shields.io/crates/v/r2d2?style=for-the-badge
