@@ -1,7 +1,6 @@
 use crate::error::{Error, Result};
 use crate::resource::Factory;
-use parking_lot::Mutex;
-use std::collections::VecDeque;
+use crossbeam_queue::ArrayQueue;
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 use tokio::sync::Semaphore;
@@ -28,7 +27,7 @@ impl<F: Factory> DerefMut for Pooled<'_, F> {
 impl<F: Factory> Drop for Pooled<'_, F> {
     fn drop(&mut self) {
         if let Some(resource) = self.resource.take() {
-            self.pool.push_resource(resource);
+            let _ = self.pool.resources.push(resource);
             self.pool.semaphore.add_permits(1);
         }
     }
@@ -57,7 +56,7 @@ impl<F: Factory> Pool<F> {
         Self {
             inner: Arc::new(Inner {
                 factory,
-                resources: Mutex::new(VecDeque::with_capacity(max_size)),
+                resources: ArrayQueue::new(max_size),
                 semaphore: Semaphore::new(max_size),
             }),
         }
@@ -78,7 +77,7 @@ impl<F: Factory> Pool<F> {
 
 struct Inner<F: Factory> {
     factory: F,
-    resources: Mutex<VecDeque<F::Output>>,
+    resources: ArrayQueue<F::Output>,
     semaphore: Semaphore,
 }
 
@@ -112,12 +111,8 @@ impl<F: Factory> Inner<F> {
         &self.factory
     }
 
-    fn pop_resource(&self) -> Option<F::Output> {
-        self.resources.lock().pop_front()
-    }
-
     async fn pop_or_create_resource(&self) -> Result<F::Output> {
-        while let Some(resource) = self.pop_resource() {
+        while let Some(resource) = self.resources.pop() {
             if self.factory.validate(&resource).await {
                 return Ok(resource);
             }
@@ -129,7 +124,7 @@ impl<F: Factory> Inner<F> {
     }
 
     async fn pop_or_create_resource_unchecked(&self) -> Result<F::Output> {
-        match self.pop_resource() {
+        match self.resources.pop() {
             Some(resource) => Ok(resource),
             None => self
                 .factory
@@ -137,10 +132,6 @@ impl<F: Factory> Inner<F> {
                 .await
                 .map_err(|e| Error::Resource(Box::new(e))),
         }
-    }
-
-    fn push_resource(&self, resource: F::Output) {
-        self.resources.lock().push_back(resource);
     }
 }
 
