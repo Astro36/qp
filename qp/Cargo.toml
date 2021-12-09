@@ -1,6 +1,6 @@
 [package]
 name = "qp"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Seungjae Park <astro.psj@gmail.com>"]
 edition = "2021"
 rust-version = "1.56"
