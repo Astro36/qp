@@ -1,6 +1,6 @@
 # Quick Pool for PostgreSQL
 
-> Rust Async Resource Pool PostgreSQL Adapter
+> High Performance Rust Async Resource Pool PostgreSQL Adapter
 
 [![Crates.io](https://img.shields.io/crates/v/qp-postgres?style=for-the-badge)](https://crates.io/crates/qp-postgres)
 [![Docs.rs](https://img.shields.io/docsrs/qp-postgres?style=for-the-badge)](https://docs.rs/qp-postgres)
