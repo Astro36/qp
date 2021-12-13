@@ -30,7 +30,7 @@ impl<F: Factory> Drop for Pooled<'_, F> {
     fn drop(&mut self) {
         if let Some(resource) = self.resource.take() {
             let _ = self.pool.resources.push(resource);
-            self.pool.idle.fetch_add(1, Ordering::SeqCst);
+            self.pool.idle.fetch_add(1, Ordering::Release);
         }
     }
 }
@@ -87,11 +87,11 @@ impl<F: Factory> Inner<F> {
     pub async fn acquire(&self) -> Result<Pooled<'_, F>> {
         let backoff = Backoff::new();
         loop {
-            let idle = self.idle.load(Ordering::SeqCst);
+            let idle = self.idle.load(Ordering::Acquire);
             if idle > 0
                 && self
                     .idle
-                    .compare_exchange_weak(idle, idle - 1, Ordering::SeqCst, Ordering::SeqCst)
+                    .compare_exchange_weak(idle, idle - 1, Ordering::AcqRel, Ordering::Acquire)
                     .is_ok()
             {
                 break;
@@ -107,13 +107,13 @@ impl<F: Factory> Inner<F> {
 
     pub async fn acquire_unchecked(&self) -> Result<Pooled<'_, F>> {
         let backoff = Backoff::new();
-        let mut idle = self.idle.load(Ordering::SeqCst);
+        let mut idle = self.idle.load(Ordering::Acquire);
         loop {
             match self.idle.compare_exchange_weak(
                 idle,
                 idle - 1,
-                Ordering::SeqCst,
-                Ordering::SeqCst,
+                Ordering::AcqRel,
+                Ordering::Acquire,
             ) {
                 Ok(_) => break,
                 Err(changed) => idle = changed,
@@ -156,6 +156,6 @@ impl<F: Factory> Inner<F> {
 }
 
 pub fn take_resource<F: Factory>(mut guard: Pooled<'_, F>) -> F::Output {
-    guard.pool.idle.fetch_add(1, Ordering::SeqCst);
+    guard.pool.idle.fetch_add(1, Ordering::Release);
     guard.resource.take().unwrap()
 }
