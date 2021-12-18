@@ -1,15 +1,14 @@
 use crate::error::{Error, Result};
 use crate::resource::Factory;
+use crate::sync::{Semaphore, SemaphorePermit};
 use crossbeam_queue::ArrayQueue;
-use crossbeam_utils::Backoff;
-use futures_lite::future;
 use std::ops::{Deref, DerefMut};
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
 pub struct Pooled<'a, F: Factory> {
     pool: &'a Inner<F>,
     resource: Option<F::Output>,
+    _permit: SemaphorePermit<'a>,
 }
 
 impl<F: Factory> Deref for Pooled<'_, F> {
@@ -30,7 +29,6 @@ impl<F: Factory> Drop for Pooled<'_, F> {
     fn drop(&mut self) {
         if let Some(resource) = self.resource.take() {
             let _ = self.pool.resources.push(resource);
-            self.pool.idle.fetch_add(1, Ordering::Release);
         }
     }
 }
@@ -59,7 +57,7 @@ impl<F: Factory> Pool<F> {
             inner: Arc::new(Inner {
                 factory,
                 resources: ArrayQueue::new(max_size),
-                idle: AtomicUsize::new(max_size),
+                semaphore: Semaphore::new(max_size),
             }),
         }
     }
@@ -80,50 +78,25 @@ impl<F: Factory> Pool<F> {
 struct Inner<F: Factory> {
     factory: F,
     resources: ArrayQueue<F::Output>,
-    idle: AtomicUsize,
+    semaphore: Semaphore,
 }
 
 impl<F: Factory> Inner<F> {
     pub async fn acquire(&self) -> Result<Pooled<'_, F>> {
-        let backoff = Backoff::new();
-        loop {
-            let idle = self.idle.load(Ordering::Acquire);
-            if idle > 0
-                && self
-                    .idle
-                    .compare_exchange_weak(idle, idle - 1, Ordering::AcqRel, Ordering::Acquire)
-                    .is_ok()
-            {
-                break;
-            }
-            backoff.spin();
-            future::yield_now().await;
-        }
+        let permit = self.semaphore.acquire().await;
         Ok(Pooled {
             pool: self,
             resource: Some(self.pop_or_create_resource().await?),
+            _permit: permit,
         })
     }
 
     pub async fn acquire_unchecked(&self) -> Result<Pooled<'_, F>> {
-        let backoff = Backoff::new();
-        let mut idle = self.idle.load(Ordering::Acquire);
-        loop {
-            match self.idle.compare_exchange_weak(
-                idle,
-                idle - 1,
-                Ordering::AcqRel,
-                Ordering::Acquire,
-            ) {
-                Ok(_) => break,
-                Err(changed) => idle = changed,
-            }
-            backoff.spin();
-            future::yield_now().await;
-        }
+        let permit = self.semaphore.acquire().await;
         Ok(Pooled {
             pool: self,
             resource: Some(self.pop_or_create_resource_unchecked().await?),
+            _permit: permit,
         })
     }
 
@@ -156,6 +129,5 @@ impl<F: Factory> Inner<F> {
 }
 
 pub fn take_resource<F: Factory>(mut guard: Pooled<'_, F>) -> F::Output {
-    guard.pool.idle.fetch_add(1, Ordering::Release);
     guard.resource.take().unwrap()
 }
