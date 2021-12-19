@@ -1,9 +1,12 @@
 use crate::error::{Error, Result};
 use crate::resource::Factory;
+#[cfg(not(feature = "tokio-semaphore"))]
 use crate::sync::{Semaphore, SemaphorePermit};
 use crossbeam_queue::ArrayQueue;
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
+#[cfg(feature = "tokio-semaphore")]
+use tokio::sync::{Semaphore, SemaphorePermit};
 
 pub struct Pooled<'a, F: Factory> {
     pool: &'a Inner<F>,
@@ -82,6 +85,7 @@ struct Inner<F: Factory> {
 }
 
 impl<F: Factory> Inner<F> {
+    #[cfg(not(feature = "tokio-semaphore"))]
     pub async fn acquire(&self) -> Result<Pooled<'_, F>> {
         let permit = self.semaphore.acquire().await;
         Ok(Pooled {
@@ -91,8 +95,38 @@ impl<F: Factory> Inner<F> {
         })
     }
 
+    #[cfg(feature = "tokio-semaphore")]
+    pub async fn acquire(&self) -> Result<Pooled<'_, F>> {
+        // A `Semaphore::acquire` can only fail if the semaphore has been closed.
+        let permit = self
+            .semaphore
+            .acquire()
+            .await
+            .map_err(|_| Error::PoolClosed)?;
+        Ok(Pooled {
+            pool: self,
+            resource: Some(self.pop_or_create_resource().await?),
+            _permit: permit,
+        })
+    }
+
+    #[cfg(not(feature = "tokio-semaphore"))]
     pub async fn acquire_unchecked(&self) -> Result<Pooled<'_, F>> {
         let permit = self.semaphore.acquire().await;
+        Ok(Pooled {
+            pool: self,
+            resource: Some(self.pop_or_create_resource_unchecked().await?),
+            _permit: permit,
+        })
+    }
+
+    #[cfg(feature = "tokio-semaphore")]
+    pub async fn acquire_unchecked(&self) -> Result<Pooled<'_, F>> {
+        let permit = self
+            .semaphore
+            .acquire()
+            .await
+            .map_err(|_| Error::PoolClosed)?;
         Ok(Pooled {
             pool: self,
             resource: Some(self.pop_or_create_resource_unchecked().await?),
