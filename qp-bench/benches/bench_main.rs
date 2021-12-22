@@ -55,11 +55,6 @@ pub fn bench_core(c: &mut Criterion) {
             core::qp::bench_with_input,
         );
         group.bench_with_input(
-            benchmark_id!("qp_tokio_semaphore", input.0, input.1),
-            &input,
-            core::qp_tokio_semaphore::bench_with_input,
-        );
-        group.bench_with_input(
             benchmark_id!("r2d2", input.0, input.1),
             &input,
             core::r2d2::bench_with_input,
@@ -97,11 +92,6 @@ pub fn bench_postgres(c: &mut Criterion) {
             benchmark_id!("qp", input.0, input.1),
             &input,
             postgres::qp::bench_with_input,
-        );
-        group.bench_with_input(
-            benchmark_id!("qp_tokio_semaphore", input.0, input.1),
-            &input,
-            postgres::qp_tokio_semaphore::bench_with_input,
         );
         group.bench_with_input(
             benchmark_id!("r2d2", input.0, input.1),
