@@ -11,14 +11,14 @@ keywords = ["async", "resource", "pool", "tokio"]
 categories = ["asynchronous", "data-structures"]
 
 [dependencies]
-async-trait = "0.1.51"
+async-trait = "0.1.52"
 crossbeam-queue = "0.3.2"
 crossbeam-utils = "0.8.5"
 thiserror = "1.0.30"
-tokio = { version = "1.14.0", features = ["sync"], optional = true }
+tokio = { version = "1.15.0", features = ["sync"], optional = true }
 
 [dev-dependencies]
-tokio = { version = "1.14.0", features = ["macros", "rt", "rt-multi-thread", "time"] }
+tokio = { version = "1.15.0", features = ["macros", "rt", "rt-multi-thread", "time"] }
 
 [features]
 tokio-semaphore = ["tokio"]
