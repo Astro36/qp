@@ -1,10 +1,9 @@
 use async_trait::async_trait;
-use std::error::Error;
 
 #[async_trait]
-pub trait Factory: Sync {
+pub trait Manage: Sync {
     type Output: Send + Sync;
-    type Error: Error + Send + Sync + 'static;
+    type Error;
 
     async fn try_create(&self) -> Result<Self::Output, Self::Error>;
 

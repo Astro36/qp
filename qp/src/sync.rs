@@ -18,8 +18,8 @@ impl Semaphore {
         }
     }
 
-    pub fn acquire(&self) -> Acquire {
-        Acquire::new(self)
+    pub async fn acquire(&self) -> SemaphorePermit<'_> {
+        Acquire::new(self).await
     }
 
     pub fn try_acquire(&self) -> Option<SemaphorePermit> {
@@ -62,7 +62,7 @@ impl<'a> SemaphorePermit<'a> {
     }
 }
 
-pub struct Acquire<'a> {
+struct Acquire<'a> {
     semaphore: &'a Semaphore,
 }
 
@@ -81,7 +81,7 @@ impl<'a> Future for Acquire<'a> {
 }
 
 impl<'a> Acquire<'a> {
-    pub fn new(semaphore: &'a Semaphore) -> Self {
+    fn new(semaphore: &'a Semaphore) -> Self {
         Self { semaphore }
     }
 }

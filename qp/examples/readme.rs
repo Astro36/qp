@@ -1,14 +1,13 @@
 use async_trait::async_trait;
-use qp::pool::{self, Pool};
-use qp::resource::Factory;
-use std::convert::Infallible;
+use qp::resource::Manage;
+use qp::{Pool, Pooled};
 
-pub struct IntFactory;
+pub struct IntManager;
 
 #[async_trait]
-impl Factory for IntFactory {
+impl Manage for IntManager {
     type Output = i32;
-    type Error = Infallible;
+    type Error = ();
 
     async fn try_create(&self) -> Result<Self::Output, Self::Error> {
         Ok(0)
@@ -21,13 +20,13 @@ impl Factory for IntFactory {
 
 #[tokio::main]
 async fn main() {
-    let pool = Pool::new(IntFactory, 1); // max_size=1
+    let pool = Pool::new(IntManager, 1); // max_size=1
 
     // create a resource when the pool is empty or all resources are occupied.
     let mut int = pool.acquire().await.unwrap();
     *int = 1;
     dbg!(*int); // 1
-    dbg!(int.is_valid().await); // true; validate the resource.
+    dbg!(Pooled::is_valid(&int).await); // true; validate the resource.
 
     // release the resource and put it back to the pool.
     drop(int);
@@ -40,7 +39,7 @@ async fn main() {
     let mut int = pool.acquire().await.unwrap();
     dbg!(*int); // 100
     *int = -1; // the resource will be disposed because `validate` is false.
-    dbg!(int.is_valid().await); // false
+    dbg!(Pooled::is_valid(&int).await); // false
     drop(int);
 
     let int = pool.acquire_unchecked().await.unwrap();
@@ -51,7 +50,7 @@ async fn main() {
     dbg!(*int); // 0; old resource is disposed and create new one.
 
     // take the resource from the pool.
-    let raw_int: i32 = pool::take_resource(int); // raw resource
+    let raw_int: i32 = Pooled::take(int); // raw resource
     dbg!(raw_int); // 0
     drop(raw_int);
 

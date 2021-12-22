@@ -1,15 +1,15 @@
 use qp::async_trait;
-use qp::pool::Pool;
-use qp::resource::Factory;
+use qp::resource::Manage;
+use qp::Pool;
 use tokio_postgres::tls::{MakeTlsConnect, TlsConnect};
 use tokio_postgres::{Client, Config, Error, Socket};
 
 pub use qp;
 pub use tokio_postgres;
 
-pub type PgPool<T> = Pool<PgConnFactory<T>>;
+pub type PgPool<T> = Pool<PgConnManager<T>>;
 
-pub struct PgConnFactory<T>
+pub struct PgConnManager<T>
 where
     T: MakeTlsConnect<Socket> + Clone + Send + Sync,
     T::Stream: Send + Sync + 'static,
@@ -21,7 +21,7 @@ where
 }
 
 #[async_trait]
-impl<T> Factory for PgConnFactory<T>
+impl<T> Manage for PgConnManager<T>
 where
     T: MakeTlsConnect<Socket> + Clone + Send + Sync,
     T::Stream: Send + Sync + 'static,
@@ -42,7 +42,7 @@ where
     }
 }
 
-impl<T> PgConnFactory<T>
+impl<T> PgConnManager<T>
 where
     T: MakeTlsConnect<Socket> + Clone + Send + Sync,
     T::Stream: Send + Sync + 'static,
@@ -61,7 +61,7 @@ where
     T::TlsConnect: Send + Sync,
     <T::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
-    Pool::new(PgConnFactory::new(config, tls), pool_size)
+    Pool::new(PgConnManager::new(config, tls), pool_size)
 }
 
 #[cfg(test)]
