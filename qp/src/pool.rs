@@ -38,6 +38,10 @@ impl<M: Manage> Pool<M> {
     pub fn get_manager(&self) -> &M {
         &self.inner.manager
     }
+
+    pub async fn reserve(&self, size: usize) {
+        self.inner.reserve(size).await;
+    }
 }
 
 struct Inner<M: Manage> {
@@ -47,37 +51,40 @@ struct Inner<M: Manage> {
 }
 
 impl<M: Manage> Inner<M> {
-    pub async fn acquire(&self) -> Result<Pooled<'_, M>, M::Error> {
+    async fn acquire(&self) -> Result<Pooled<'_, M>, M::Error> {
         let permit = self.semaphore.acquire().await;
-        Ok(Pooled {
-            pool: self,
-            resource: Some(self.pop_or_create_resource().await?),
-            _permit: permit,
-        })
-    }
-
-    pub async fn acquire_unchecked(&self) -> Result<Pooled<'_, M>, M::Error> {
-        let permit = self.semaphore.acquire().await;
-        Ok(Pooled {
-            pool: self,
-            resource: Some(self.pop_or_create_resource_unchecked().await?),
-            _permit: permit,
-        })
-    }
-
-    async fn pop_or_create_resource(&self) -> Result<M::Output, M::Error> {
         while let Some(resource) = self.resources.pop() {
             if self.manager.validate(&resource).await {
-                return Ok(resource);
+                return Ok(Pooled {
+                    pool: self,
+                    resource: Some(resource),
+                    _permit: permit,
+                });
             }
         }
-        self.manager.try_create().await
+        Ok(Pooled {
+            pool: self,
+            resource: Some(self.manager.try_create().await?),
+            _permit: permit,
+        })
     }
 
-    async fn pop_or_create_resource_unchecked(&self) -> Result<M::Output, M::Error> {
-        match self.resources.pop() {
-            Some(resource) => Ok(resource),
-            None => self.manager.try_create().await,
+    async fn acquire_unchecked(&self) -> Result<Pooled<'_, M>, M::Error> {
+        let permit = self.semaphore.acquire().await;
+        Ok(Pooled {
+            pool: self,
+            resource: Some(match self.resources.pop() {
+                Some(resource) => resource,
+                None => self.manager.try_create().await?,
+            }),
+            _permit: permit,
+        })
+    }
+
+    async fn reserve(&self, size: usize) {
+        let mut resources = Vec::with_capacity(size);
+        for _ in 0..size {
+            resources.push(self.acquire_unchecked().await);
         }
     }
 }
