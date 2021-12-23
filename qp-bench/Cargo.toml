@@ -22,7 +22,7 @@ deadpool-postgres = "0.10.1"
 futures = "0.3.18"
 mobc = "0.7.3"
 mobc-postgres = "0.7.0"
-qp = { path = "../qp", version = "0.1.0" }
+qp = { path = "../qp", version = "0.2.0" }
 qp-postgres = { path = "../qp-postgres", version = "0.1.0" }
 r2d2 = "0.8.9"
 r2d2_postgres = "0.18.1"
