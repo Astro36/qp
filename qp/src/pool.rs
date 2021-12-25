@@ -4,6 +4,7 @@ use crossbeam_queue::ArrayQueue;
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
+/// An async resource pool.
 pub struct Pool<M: Manage> {
     inner: Arc<Inner<M>>,
 }
@@ -17,6 +18,7 @@ impl<M: Manage> Clone for Pool<M> {
 }
 
 impl<M: Manage> Pool<M> {
+    /// Creates a new `Pool` with the given size.
     pub fn new(manager: M, max_size: usize) -> Self {
         Self {
             inner: Arc::new(Inner {
@@ -27,18 +29,22 @@ impl<M: Manage> Pool<M> {
         }
     }
 
+    /// Acquires a resource from the pool.
     pub async fn acquire(&self) -> Result<Pooled<'_, M>, M::Error> {
         self.inner.acquire().await
     }
 
+    /// Acquires a resource from the pool without checking whether the resource is valid.
     pub async fn acquire_unchecked(&self) -> Result<Pooled<'_, M>, M::Error> {
         self.inner.acquire_unchecked().await
     }
 
+    /// Returns the resource manager of the pool.
     pub fn get_manager(&self) -> &M {
         &self.inner.manager
     }
 
+    /// Reserves the resources for at least `size` more resources to be acquired from the pool.
     pub async fn reserve(&self, size: usize) {
         self.inner.reserve(size).await;
     }
@@ -89,6 +95,9 @@ impl<M: Manage> Inner<M> {
     }
 }
 
+/// An acquired resource from the pool.
+///
+/// This type is created by the [`Pool::acquire`] method and related methods.
 pub struct Pooled<'a, M: Manage> {
     pool: &'a Inner<M>,
     resource: Option<M::Output>,
@@ -118,10 +127,12 @@ impl<M: Manage> Drop for Pooled<'_, M> {
 }
 
 impl<M: Manage> Pooled<'_, M> {
+    /// Returns `true` if the given resource is valid.
     pub async fn is_valid(pooled: &Self) -> bool {
         pooled.pool.manager.validate(pooled).await
     }
 
+    /// Takes the resource out of the [`Pooled`], leaving a `None` in its place.
     pub fn take(mut pooled: Self) -> M::Output {
         pooled.resource.take().unwrap()
     }
