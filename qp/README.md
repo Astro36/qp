@@ -94,27 +94,13 @@ async fn main() {
 
 ### Performance Comparison
 
-<table>
-<tr>
-<td colspan="2"><img src="https://astro36.github.io/qp/core/pool=16%20worker=64/report/violin.svg" alt="total"></td>
-</tr>
-<tr>
-<td><img src="https://astro36.github.io/qp/core/bb8/pool=16%20worker=64/report/pdf.svg" alt="bb8"></td>
-<td><img src="https://astro36.github.io/qp/core/deadpool/pool=16%20worker=64/report/pdf.svg" alt="deadpool"></td>
-</tr>
-<tr>
-<td><img src="https://astro36.github.io/qp/core/mobc/pool=16%20worker=64/report/pdf.svg" alt="mobc"></td>
-<td><img src="https://astro36.github.io/qp/core/qp/pool=16%20worker=64/report/pdf.svg" alt="qp"></td>
-</tr>
-<tr>
-<td><img src="https://astro36.github.io/qp/core/r2d2/pool=16%20worker=64/report/pdf.svg" alt="r2d2"></td>
-<td></td>
-</tr>
-</table>
+![Benchmark](/../../../rust-pool-benchmark/blob/main/results/benchmark(p08_w064).svg)
+
+![Benchmark](/../../../rust-pool-benchmark/blob/main/results/benchmark(p16_w064).svg)
 
 > Benchmarked on [GitHub Action: Ubuntu 20.04, CPU 2 Core, RAM 7GB](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources)
 
-For more information, see [Quick Pool Benchmark](/qp-bench/README.md).
+For more information, see [Quick Pool Benchmark](/../../../rust-pool-benchmark/blob/main/results/README.md).
 
 ## License
 
