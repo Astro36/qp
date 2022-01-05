@@ -1,6 +1,6 @@
 # Quick Pool
 
-> High Performance Rust Async Resource Pool
+> High Performance Async Generic Pool
 
 [![Crates.io](https://img.shields.io/crates/v/qp?style=for-the-badge)](https://crates.io/crates/qp)
 [![Docs.rs](https://img.shields.io/docsrs/qp?style=for-the-badge)](https://docs.rs/qp)
