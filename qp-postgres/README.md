@@ -58,7 +58,7 @@ For more information, see [Rust Pool Benchmark](/../../../rust-pool-benchmark/bl
 ## License
 
 ```text
-Copyright (c) 2021 Seungjae Park
+Copyright (c) 2022 Seungjae Park
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
