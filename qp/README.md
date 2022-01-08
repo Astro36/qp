@@ -22,16 +22,15 @@
 
 ```rust
 use async_trait::async_trait;
-use qp::pool::{self, Pool};
-use qp::resource::Factory;
-use std::convert::Infallible;
+use qp::resource::Manage;
+use qp::{Pool, Pooled};
 
-pub struct IntFactory;
+pub struct IntManager;
 
 #[async_trait]
-impl Factory for IntFactory {
+impl Manage for IntManager {
     type Output = i32;
-    type Error = Infallible;
+    type Error = ();
 
     async fn try_create(&self) -> Result<Self::Output, Self::Error> {
         Ok(0)
@@ -44,13 +43,13 @@ impl Factory for IntFactory {
 
 #[tokio::main]
 async fn main() {
-    let pool = Pool::new(IntFactory, 1); // max_size=1
+    let pool = Pool::new(IntManager, 1); // max_size=1
 
     // create a resource when the pool is empty or all resources are occupied.
     let mut int = pool.acquire().await.unwrap();
     *int = 1;
     dbg!(*int); // 1
-    dbg!(int.is_valid().await); // true; validate the resource.
+    dbg!(Pooled::is_valid(&int).await); // true; validate the resource.
 
     // release the resource and put it back to the pool.
     drop(int);
@@ -63,7 +62,7 @@ async fn main() {
     let mut int = pool.acquire().await.unwrap();
     dbg!(*int); // 100
     *int = -1; // the resource will be disposed because `validate` is false.
-    dbg!(int.is_valid().await); // false
+    dbg!(Pooled::is_valid(&int).await); // false
     drop(int);
 
     let int = pool.acquire_unchecked().await.unwrap();
@@ -74,7 +73,7 @@ async fn main() {
     dbg!(*int); // 0; old resource is disposed and create new one.
 
     // take the resource from the pool.
-    let raw_int: i32 = pool::take_resource(int); // raw resource
+    let raw_int: i32 = Pooled::take(int); // raw resource
     dbg!(raw_int); // 0
     drop(raw_int);
 
@@ -85,27 +84,27 @@ async fn main() {
 
 ## Alternatives
 
-| Crate      | Async Runtime                 | Version             |
-| ---------- | ----------------------------- | ------------------- |
-| [bb8]      | [tokio]                       | ![bb8-version]      |
-| [deadpool] | [async-std], [tokio]          | ![deadpool-version] |
-| [mobc]     | [actix], [async-std], [tokio] | ![mobc-version]     |
-| [r2d2]     | not supported                 | ![r2d2-version]     |
+| Crate      | Version             |
+| ---------- | ------------------- |
+| [bb8]      | ![bb8-version]      |
+| [deadpool] | ![deadpool-version] |
+| [mobc]     | ![mobc-version]     |
+| [r2d2]     | ![r2d2-version]     |
 
 ### Performance Comparison
+
+> Resource Acquisition Time Benchmark
 
 ![Benchmark](/../../../rust-pool-benchmark/blob/main/results/benchmark(p08_w064).svg)
 
 ![Benchmark](/../../../rust-pool-benchmark/blob/main/results/benchmark(p16_w064).svg)
 
-> Benchmarked on [GitHub Action: Ubuntu 20.04, CPU 2 Core, RAM 7GB](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources)
-
-For more information, see [Quick Pool Benchmark](/../../../rust-pool-benchmark/blob/main/results/README.md).
+For more information, see [Rust Pool Benchmark](/../../../rust-pool-benchmark/blob/main/results/README.md).
 
 ## License
 
 ```text
-Copyright (c) 2021 Seungjae Park
+Copyright (c) 2022 Seungjae Park
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -138,10 +137,6 @@ SOFTWARE.
 [mobc]: https://crates.io/crates/mobc
 [qp]: https://crates.io/crates/qp
 [r2d2]: https://crates.io/crates/r2d2
-
-[actix]: https://crates.io/crates/actix
-[async-std]: https://crates.io/crates/async-std
-[tokio]: https://crates.io/crates/r2d2
 
 [bb8-version]: https://img.shields.io/crates/v/bb8?style=for-the-badge
 [deadpool-version]: https://img.shields.io/crates/v/deadpool?style=for-the-badge

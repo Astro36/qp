@@ -47,27 +47,13 @@ async fn main() {
 
 ### Performance Comparison
 
-<table>
-<tr>
-<td colspan="2"><img src="https://astro36.github.io/qp/postgres/pool=16%20worker=64/report/violin.svg" alt="total"></td>
-</tr>
-<tr>
-<td><code>bb8-postgres</code> has timeout issue</td>
-<td><img src="https://astro36.github.io/qp/postgres/deadpool/pool=16%20worker=64/report/pdf.svg" alt="deadpool-postgres"></td>
-</tr>
-<tr>
-<td><img src="https://astro36.github.io/qp/postgres/mobc/pool=16%20worker=64/report/pdf.svg" alt="mobc-postgres"></td>
-<td><img src="https://astro36.github.io/qp/postgres/qp/pool=16%20worker=64/report/pdf.svg" alt="qp-postgres"></td>
-</tr>
-<tr>
-<td><img src="https://astro36.github.io/qp/postgres/r2d2/pool=16%20worker=64/report/pdf.svg" alt="r2d2-postgres"></td>
-<td><img src="https://astro36.github.io/qp/postgres/sqlx/pool=16%20worker=64/report/pdf.svg" alt="sqlx"></td>
-</tr>
-</table>
+> PostgreSQL Total Query Time Benchmark
 
-> Benchmarked on [GitHub Action: Ubuntu 20.04, CPU 2 Core, RAM 7GB](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources)
+![Benchmark](/../../../rust-pool-benchmark/blob/main/postgres/results/benchmark(p08_w64).svg)
 
-For more information, see [Quick Pool Benchmark](/qp-bench/README.md).
+![Benchmark](/../../../rust-pool-benchmark/blob/main/postgres/results/benchmark(p16_w64).svg)
+
+For more information, see [Rust Pool Benchmark](/../../../rust-pool-benchmark/blob/main/postgres/results/README.md).
 
 ## License
 
