@@ -1,7 +1,6 @@
 [workspace]
 members = [
   "qp",
-  "qp-bench",
   "qp-postgres",
   "examples/postgres-axum",
   "examples/postgres-hyper",
