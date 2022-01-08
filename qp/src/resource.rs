@@ -1,7 +1,7 @@
 //! A module for managed resources.
 use async_trait::async_trait;
 
-/// An interface for managing resources used by [`Pool`](crate::Pool) 
+/// An interface for managing resources used by [`Pool`](crate::Pool)
 #[async_trait]
 pub trait Manage: Sync {
     /// The type of resource managed by [`Pool`](crate::Pool).

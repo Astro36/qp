@@ -132,7 +132,9 @@ impl<M: Manage> Pooled<'_, M> {
         pooled.pool.manager.validate(pooled).await
     }
 
-    /// Takes the resource out of the [`Pooled`], leaving a `None` in its place.
+    /// Takes the raw resource out of the [`Pooled`], leaving a `None` in its place.
+    ///
+    /// This function consumes `pooled` to prevent double `take`.
     pub fn take(mut pooled: Self) -> M::Output {
         pooled.resource.take().unwrap()
     }
