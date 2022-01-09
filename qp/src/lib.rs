@@ -1,3 +1,4 @@
+//! High Performance Async Generic Pool
 mod pool;
 pub mod resource;
 pub mod sync;

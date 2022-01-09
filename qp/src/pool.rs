@@ -141,7 +141,7 @@ impl<M: Manage> Pooled<'_, M> {
 
     /// Takes the raw resource out of the [`Pooled`], leaving a `None` in its place.
     ///
-    /// This function consumes `pooled` to prevent double `take`.
+    /// This function consumes `pooled` to prevent double [`take`](Pooled::take).
     pub fn take(mut pooled: Self) -> M::Output {
         pooled.resource.take().unwrap()
     }

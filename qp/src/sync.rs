@@ -46,7 +46,9 @@ impl Semaphore {
         Acquire::new(self).await
     }
 
-    /// Tries to acquire a permit from the semaphore.
+    /// Tries to acquire a permit from the semaphore if there is one available.
+    ///
+    /// Returns `None` immediately if there are no idle resources available in the pool.
     ///
     /// # Examples
     ///
