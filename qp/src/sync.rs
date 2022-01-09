@@ -22,6 +22,7 @@ impl Semaphore {
     /// let binary_semaphore = Semaphore::new(1);
     /// ```
     pub fn new(permits: usize) -> Self {
+        debug_assert!(permits >= 1);
         Self {
             permits: AtomicUsize::new(permits),
             waiters: SegQueue::new(),
@@ -67,7 +68,7 @@ impl Semaphore {
     /// }
     pub fn try_acquire(&self) -> Option<SemaphorePermit> {
         let backoff = Backoff::new();
-        let mut permits = self.permits.load(Ordering::Acquire);
+        let mut permits = self.permits.load(Ordering::Relaxed);
         loop {
             if permits == 0 {
                 return None;
@@ -75,8 +76,8 @@ impl Semaphore {
             match self.permits.compare_exchange_weak(
                 permits,
                 permits - 1,
-                Ordering::AcqRel,
                 Ordering::Acquire,
+                Ordering::Relaxed,
             ) {
                 Ok(_) => return Some(SemaphorePermit::new(self)),
                 Err(changed) => permits = changed,
@@ -95,7 +96,7 @@ pub struct SemaphorePermit<'a> {
 
 impl Drop for SemaphorePermit<'_> {
     fn drop(&mut self) {
-        self.semaphore.permits.fetch_add(1, Ordering::Release);
+        self.semaphore.permits.fetch_add(1, Ordering::Relaxed);
         if let Some(waker) = self.semaphore.waiters.pop() {
             waker.wake();
         }
