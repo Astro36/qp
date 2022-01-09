@@ -20,6 +20,7 @@ impl<M: Manage> Clone for Pool<M> {
 impl<M: Manage> Pool<M> {
     /// Creates a new `Pool` with the given size.
     pub fn new(manager: M, max_size: usize) -> Self {
+        debug_assert!(max_size >= 1);
         Self {
             inner: Arc::new(Inner {
                 manager,
@@ -45,8 +46,9 @@ impl<M: Manage> Pool<M> {
     }
 
     /// Reserves the resources for at least `size` more resources to be acquired from the pool.
-    pub async fn reserve(&self, size: usize) {
-        self.inner.reserve(size).await;
+    pub async fn reserve(&self, size: usize) -> Result<(), M::Error> {
+        debug_assert!(size >= 1);
+        self.inner.reserve(size).await
     }
 }
 
@@ -61,37 +63,42 @@ impl<M: Manage> Inner<M> {
         let permit = self.semaphore.acquire().await;
         while let Some(resource) = self.resources.pop() {
             if self.manager.validate(&resource).await {
-                return Ok(Pooled {
-                    pool: self,
-                    resource: Some(resource),
-                    _permit: permit,
-                });
+                return Ok(self.make_pooled(resource, permit));
             }
         }
-        Ok(Pooled {
-            pool: self,
-            resource: Some(self.manager.try_create().await?),
-            _permit: permit,
-        })
+        Ok(self.make_pooled(self.manager.try_create().await?, permit))
     }
 
     async fn acquire_unchecked(&self) -> Result<Pooled<'_, M>, M::Error> {
         let permit = self.semaphore.acquire().await;
-        Ok(Pooled {
-            pool: self,
-            resource: Some(match self.resources.pop() {
+        Ok(self.make_pooled(
+            match self.resources.pop() {
                 Some(resource) => resource,
                 None => self.manager.try_create().await?,
-            }),
-            _permit: permit,
-        })
+            },
+            permit,
+        ))
     }
 
-    async fn reserve(&self, size: usize) {
+    fn make_pooled<'a>(
+        &'a self,
+        resource: M::Output,
+        permit: SemaphorePermit<'a>,
+    ) -> Pooled<'a, M> {
+        Pooled {
+            pool: self,
+            resource: Some(resource),
+            _permit: permit,
+        }
+    }
+
+    async fn reserve(&self, size: usize) -> Result<(), M::Error> {
+        debug_assert!(size <= self.resources.capacity());
         let mut resources = Vec::with_capacity(size);
         for _ in 0..size {
-            resources.push(self.acquire_unchecked().await);
+            resources.push(self.acquire_unchecked().await?);
         }
+        Ok(())
     }
 }
 
