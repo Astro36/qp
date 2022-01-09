@@ -1,8 +1,6 @@
 use async_trait::async_trait;
 use qp::resource::Manage;
 use qp::{Pool, Pooled};
-use std::time::Duration;
-use tokio::time::sleep;
 
 const MAX_POOL_SIZE: usize = 4;
 const WORKERS: usize = 8;
@@ -39,6 +37,7 @@ impl Manage for CounterManager {
 #[tokio::test]
 async fn main() {
     let pool = Pool::new(CounterManager, MAX_POOL_SIZE);
+    pool.reserve(MAX_POOL_SIZE).await.unwrap();
 
     let handles = (0..WORKERS)
         .map(|_| {
@@ -47,7 +46,6 @@ async fn main() {
                 for _ in 0..ITERATIONS {
                     let mut counter = pool.acquire().await.unwrap();
                     counter.increase();
-                    sleep(Duration::from_millis(1)).await;
                 }
             })
         })
