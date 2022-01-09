@@ -1,3 +1,4 @@
+//! High Performance Async Generic Pool PostgreSQL Adapter
 use qp::async_trait;
 use qp::resource::Manage;
 use qp::Pool;
@@ -7,8 +8,10 @@ use tokio_postgres::{Client, Config, Error, Socket};
 pub use qp;
 pub use tokio_postgres;
 
+/// An alias for [`Pool`](qp::Pool), managing PostgreSQL connections.
 pub type PgPool<T> = Pool<PgConnManager<T>>;
 
+/// A PostgreSQL connection manager.
 pub struct PgConnManager<T>
 where
     T: MakeTlsConnect<Socket> + Clone + Send + Sync,
@@ -49,11 +52,13 @@ where
     T::TlsConnect: Send + Sync,
     <T::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
+    /// Creates a new PostgreSQL connection manager.
     pub fn new(config: Config, tls: T) -> Self {
         Self { config, tls }
     }
 }
 
+/// Creates a new PostgreSQL connection pool.
 pub fn connect<T>(config: Config, tls: T, pool_size: usize) -> PgPool<T>
 where
     T: MakeTlsConnect<Socket> + Clone + Send + Sync,
