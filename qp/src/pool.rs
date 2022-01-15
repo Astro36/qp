@@ -41,14 +41,24 @@ impl<M: Manage> Pool<M> {
     }
 
     /// Returns the resource manager of the pool.
-    pub fn get_manager(&self) -> &M {
+    pub fn manager(&self) -> &M {
         &self.inner.manager
+    }
+
+    /// Returns the number of resources the pool can manage.
+    pub fn max_size(&self) -> usize {
+        self.inner.resources.capacity()
     }
 
     /// Reserves the resources for at least `size` more resources to be acquired from the pool.
     pub async fn reserve(&self, size: usize) -> Result<(), M::Error> {
         debug_assert!(size >= 1);
         self.inner.reserve(size).await
+    }
+
+    /// Returns the current number of available resources.
+    pub fn size(&self) -> usize {
+        self.inner.semaphore.available_permits()
     }
 }
 
