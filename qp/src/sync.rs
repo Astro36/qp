@@ -34,16 +34,37 @@ impl Semaphore {
     /// # Examples
     ///
     /// ```
-    /// use qp::sync::Semaphore;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let binary_semaphore = Semaphore::new(1);
-    ///     let permit1 = binary_semaphore.acquire().await;
-    /// }
+    /// # use qp::sync::Semaphore;
+    /// # #[tokio::main]
+    /// # async fn main() {
+    /// let binary_semaphore = Semaphore::new(1);
+    /// assert_eq!(binary_semaphore.available_permits(), 1);
+    /// let permit = binary_semaphore.acquire().await;
+    /// assert_eq!(binary_semaphore.available_permits(), 0);
+    /// drop(permit);
+    /// assert_eq!(binary_semaphore.available_permits(), 1);
+    /// # }
     /// ```
     pub async fn acquire(&self) -> SemaphorePermit<'_> {
         Acquire::new(self).await
+    }
+
+    /// Returns the current number of available permits.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use qp::sync::Semaphore;
+    /// # #[tokio::main]
+    /// # async fn main() {
+    /// let binary_semaphore = Semaphore::new(1);
+    /// assert_eq!(binary_semaphore.available_permits(), 1);
+    /// let permit = binary_semaphore.acquire().await;
+    /// assert_eq!(binary_semaphore.available_permits(), 0);
+    /// # }
+    /// ```
+    pub fn available_permits(&self) -> usize {
+        self.permits.load(Ordering::Acquire)
     }
 
     /// Tries to acquire a permit from the semaphore if there is one available.
@@ -53,21 +74,18 @@ impl Semaphore {
     /// # Examples
     ///
     /// ```
-    /// use qp::sync::Semaphore;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let binary_semaphore = Semaphore::new(1);
-    ///     let permit1 = binary_semaphore.try_acquire();
-    ///     assert!(permit1.is_some());
-    ///     let permit2 = binary_semaphore.try_acquire();
-    ///     assert!(permit2.is_none());
-    ///     let permit3 = binary_semaphore.try_acquire();
-    ///     assert!(permit3.is_none());
-    ///     drop(permit1);
-    ///     let permit4 = binary_semaphore.try_acquire();
-    ///     assert!(permit4.is_some());
-    /// }
+    /// # use qp::sync::Semaphore;
+    /// # #[tokio::main]
+    /// # async fn main() {
+    /// let binary_semaphore = Semaphore::new(1);
+    /// let permit1 = binary_semaphore.try_acquire();
+    /// assert!(permit1.is_some());
+    /// let permit2 = binary_semaphore.try_acquire();
+    /// assert!(permit2.is_none());
+    /// drop(permit1);
+    /// let permit3 = binary_semaphore.try_acquire();
+    /// assert!(permit3.is_some());
+    /// # }
     pub fn try_acquire(&self) -> Option<SemaphorePermit> {
         let backoff = Backoff::new();
         let mut permits = self.permits.load(Ordering::Relaxed);
@@ -98,7 +116,7 @@ pub struct SemaphorePermit<'a> {
 
 impl Drop for SemaphorePermit<'_> {
     fn drop(&mut self) {
-        self.semaphore.permits.fetch_add(1, Ordering::Relaxed);
+        self.semaphore.permits.fetch_add(1, Ordering::Release);
         if let Some(waker) = self.semaphore.waiters.pop() {
             waker.wake();
         }
