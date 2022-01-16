@@ -21,7 +21,7 @@ impl Semaphore {
     /// # use qp::sync::Semaphore;
     /// let binary_semaphore = Semaphore::new(1);
     /// ```
-    pub fn new(permits: usize) -> Self {
+    pub const fn new(permits: usize) -> Self {
         debug_assert!(permits >= 1);
         Self {
             permits: AtomicUsize::new(permits),
@@ -124,7 +124,7 @@ impl Drop for SemaphorePermit<'_> {
 }
 
 impl<'a> SemaphorePermit<'a> {
-    fn new(semaphore: &'a Semaphore) -> Self {
+    const fn new(semaphore: &'a Semaphore) -> Self {
         Self { semaphore }
     }
 }
@@ -148,7 +148,7 @@ impl<'a> Future for Acquire<'a> {
 }
 
 impl<'a> Acquire<'a> {
-    fn new(semaphore: &'a Semaphore) -> Self {
+    const fn new(semaphore: &'a Semaphore) -> Self {
         Self { semaphore }
     }
 }
