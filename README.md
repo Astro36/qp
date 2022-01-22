@@ -45,11 +45,16 @@ impl Manage for IntManager {
 async fn main() {
     let pool = Pool::new(IntManager, 1); // max_size=1
 
+    dbg!(pool.max_size()); // 1
+    dbg!(pool.size()); // 1
+
     // create a resource when the pool is empty or all resources are occupied.
     let mut int = pool.acquire().await.unwrap();
     *int = 1;
     dbg!(*int); // 1
     dbg!(Pooled::is_valid(&int).await); // true; validate the resource.
+
+    dbg!(pool.size()); // 0
 
     // release the resource and put it back to the pool.
     drop(int);
