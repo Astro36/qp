@@ -96,13 +96,27 @@ async fn main() {
 | [mobc]     | ![mobc-version]     |
 | [r2d2]     | ![r2d2-version]     |
 
+### bb8 vs qp
+
+`bb8` implements a resource waiter queue using `futures-channel` and uses the `parking_lot` for mutex.
+
+On the other hand, `qp` uses a **lock-free** waiter queue using `crossbeam-queue`.
+`qp` doesn't use mutex.
+
+### deadpool vs qp
+
+`deadpool` implements a idle resource queue using [`VecDeque`](https://doc.rust-lang.org/std/collections/struct.VecDeque.html) and [`Mutex`](https://doc.rust-lang.org/std/sync/struct.Mutex.html) and controls access to resources using [`tokio::sync::Semaphore`](https://docs.rs/tokio/latest/tokio/sync/struct.Semaphore.html).
+
+On the other hand, `qp` uses a semaphore implemented using a lock-free queue.
+Also, `qp` is a **lock-free** data structure that never uses lock in idle resource queue.
+
 ### Performance Comparison
 
 > Resource Acquisition Time Benchmark
 
-![Benchmark](/../../../rust-pool-benchmark/blob/main/results/benchmark(p08_w064).svg)
+![Benchmark](https://raw.githubusercontent.com/Astro36/rust-pool-benchmark/main/results/benchmark(p08_w064).svg)
 
-![Benchmark](/../../../rust-pool-benchmark/blob/main/results/benchmark(p16_w064).svg)
+![Benchmark](https://raw.githubusercontent.com/Astro36/rust-pool-benchmark/main/results/benchmark(p16_w064).svg)
 
 For more information, see [Rust Pool Benchmark](/../../../rust-pool-benchmark/blob/main/results/README.md).
 
