@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'qp/src/**'
+      - 'qp/tests/**'
+      - 'qp/Cargo.toml'
+      - 'qp-postgres/src/**'
+      - 'qp-postgres/tests/**'
+      - 'qp-postgres/Cargo.toml'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'qp/src/**'
+      - 'qp/tests/**'
+      - 'qp/Cargo.toml'
+      - 'qp-postgres/src/**'
+      - 'qp-postgres/tests/**'
+      - 'qp-postgres/Cargo.toml'
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Cache crates
+        uses: Swatinem/rust-cache@v1
+
+      - name: rustfmt
+        run: cargo fmt -- --check
+
+      - name: Clippy
+        run: cargo clippy -- -D warnings
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Cache crates
+        uses: Swatinem/rust-cache@v1
+
+      - name: Test
+        run: cargo test
