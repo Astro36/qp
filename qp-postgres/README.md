@@ -6,7 +6,7 @@
 [![Docs.rs](https://img.shields.io/docsrs/qp-postgres?style=for-the-badge)](https://docs.rs/qp-postgres)
 [![Rust](https://img.shields.io/badge/rust-2021-black.svg?style=for-the-badge)](https://doc.rust-lang.org/edition-guide/rust-2021/index.html)
 [![Rust](https://img.shields.io/badge/rustc-1.56+-black.svg?style=for-the-badge)](https://blog.rust-lang.org/2021/10/21/Rust-1.56.0.html)
-[![GitHub Workflow](https://img.shields.io/github/workflow/status/Astro36/qp/Quick%20Pool%20for%20PostgreSQL?style=for-the-badge)](https://github.com/Astro36/qp/actions/workflows/qp-postgres.yml)
+[![GitHub Workflow](https://img.shields.io/github/workflow/status/Astro36/qp/CI?style=for-the-badge)](https://github.com/Astro36/qp/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/d/qp-postgres?style=for-the-badge)](https://crates.io/crates/qp-postgres)
 [![License](https://img.shields.io/crates/l/qp-postgres?style=for-the-badge)](./LICENSE) 
 
