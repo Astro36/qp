@@ -25,6 +25,35 @@ on:
       - 'qp-postgres/Cargo.toml'
 
 jobs:
+  codecov:
+    name: CodeCov
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Cache crates
+        uses: Swatinem/rust-cache@v1
+
+      - name: Install nightly toolchain and llvm-tools-preview component
+        run: rustup toolchain install nightly --component llvm-tools-preview && rustup default nightly
+
+      - name: Test
+        env:
+          LLVM_PROFILE_FILE: grcov-%p-%m.profraw
+          RUSTFLAGS: -Zinstrument-coverage
+        run: cargo test
+
+      - name: Generate coverage
+        run: grcov --ignore-not-existing --binary-path ./target/debug/ -o lcov.info -s . .
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          file: lcov.info
+          fail_ci_if_error: true
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
