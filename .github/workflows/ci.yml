@@ -62,7 +62,7 @@ jobs:
         run: cargo test
 
       - name: Generate coverage
-        run: grcov --ignore-not-existing --binary-path ./target/debug/ -o lcov.info -s . .
+        run: grcov --ignore-not-existing --binary-path ./target/debug/ --ignore "**/examples/**" -o lcov.info -s . .
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
