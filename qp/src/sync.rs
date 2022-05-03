@@ -152,3 +152,38 @@ impl<'a> Acquire<'a> {
         Self { semaphore }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{sync::Arc, time::Duration};
+    #[tokio::test]
+    async fn test_abort_acquire() {
+        let sem = Arc::new(Semaphore::new(1));
+        //assert_eq!(sem.waiting_count(), 0);
+        // Grab the only permit for the semaphore
+        let permit = sem.try_acquire().unwrap();
+        // Spawn two tokio tasks waiting for the semaphore to become
+        // available. The first one times out after 1ms and the second
+        // after 3ms.
+        let a = {
+            let sem = sem.clone();
+            tokio::spawn(tokio::time::timeout(Duration::from_millis(1), async move {
+                sem.acquire().await;
+            }))
+        };
+        tokio::time::sleep(Duration::from_millis(1)).await;
+        let b = {
+            let sem = sem.clone();
+            tokio::spawn(tokio::time::timeout(Duration::from_millis(2), async move {
+                let _ = sem.acquire().await;
+            }))
+        };
+        tokio::time::sleep(Duration::from_millis(1)).await;
+        // The first task should now be timed out.
+        drop(permit);
+        assert!(a.await.unwrap().is_err());
+        assert!(b.await.unwrap().is_ok());
+        assert_eq!(sem.waiters.len(), 0);
+    }
+}
