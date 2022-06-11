@@ -12,8 +12,8 @@ categories = ["asynchronous", "database", "data-structures"]
 
 [dependencies]
 qp = { path = "../qp", version = "0.2.0" }
-tokio = { version = "1.15.0", features = ["rt"] }
-tokio-postgres = "0.7.5"
+tokio = { version = "1.19.2", features = ["rt"] }
+tokio-postgres = "0.7.6"
 
 [dev-dependencies]
-tokio = { version = "1.15.0", features = ["macros", "rt", "rt-multi-thread"] }
+tokio = { version = "1.19.2", features = ["macros", "rt", "rt-multi-thread"] }

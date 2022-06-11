@@ -12,6 +12,6 @@ categories = ["asynchronous", "database", "data-structures", "network-programmin
 publish = false
 
 [dependencies]
-hyper = { version = "0.14.15", features = ["full"] }
+hyper = { version = "0.14.19", features = ["full"] }
 qp-postgres = { path = "../../qp-postgres", version = "0.1.0" }
-tokio = { version = "1.14.0", features = ["full"] }
+tokio = { version = "1.19.2", features = ["full"] }
