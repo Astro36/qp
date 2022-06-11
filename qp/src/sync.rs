@@ -3,7 +3,7 @@ use crossbeam_queue::SegQueue;
 use crossbeam_utils::Backoff;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::task::{Context, Poll, Waker};
 
 /// Counting semaphore performing asynchronous permit acquisition.
@@ -131,6 +131,7 @@ impl<'a> SemaphorePermit<'a> {
 
 struct Acquire<'a> {
     semaphore: &'a Semaphore,
+    waiting: AtomicBool,
 }
 
 impl<'a> Future for Acquire<'a> {
@@ -140,7 +141,10 @@ impl<'a> Future for Acquire<'a> {
         match self.semaphore.try_acquire() {
             Some(permit) => Poll::Ready(permit),
             None => {
-                self.semaphore.waiters.push(cx.waker().clone());
+                if !self.waiting.load(Ordering::SeqCst) {
+                    self.waiting.store(true, Ordering::SeqCst);
+                    self.semaphore.waiters.push(cx.waker().clone());
+                }
                 Poll::Pending
             }
         }
@@ -149,7 +153,10 @@ impl<'a> Future for Acquire<'a> {
 
 impl<'a> Acquire<'a> {
     const fn new(semaphore: &'a Semaphore) -> Self {
-        Self { semaphore }
+        Self {
+            semaphore,
+            waiting: AtomicBool::new(false),
+        }
     }
 }
 
