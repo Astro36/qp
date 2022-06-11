@@ -159,9 +159,9 @@ impl<M: Manage> Pooled<'_, M> {
 
 #[cfg(test)]
 mod tests {
-    use std::{sync::atomic::{AtomicUsize, Ordering}, time::Duration};
-
     use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::time::Duration;
 
     #[derive(Default)]
     struct Manager {

@@ -163,7 +163,9 @@ impl<'a> Acquire<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{sync::Arc, time::Duration};
+    use std::sync::Arc;
+    use std::time::Duration;
+
     #[tokio::test]
     async fn test_abort_acquire() {
         let sem = Arc::new(Semaphore::new(1));
