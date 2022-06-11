@@ -156,3 +156,55 @@ impl<M: Manage> Pooled<'_, M> {
         pooled.resource.take().unwrap()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::time::Duration;
+
+    #[derive(Default)]
+    struct Manager {
+        creation_counter: AtomicUsize,
+    }
+
+    #[async_trait::async_trait]
+    impl Manage for Manager {
+        type Output = ();
+        type Error = ();
+        async fn try_create(&self) -> Result<Self::Output, Self::Error> {
+            assert_eq!(self.creation_counter.fetch_add(1, Ordering::Relaxed), 0);
+            Ok(())
+        }
+    }
+
+    #[tokio::test]
+    async fn test_abort_acquire() {
+        let pool = Pool::new(Manager::default(), 1);
+        // Grab the only object from the pool
+        let obj = pool.acquire().await;
+        // Spawn two tokio tasks waiting for an object.
+        // The first one times out after 1ms and the second
+        // after 3ms.
+        let a = {
+            let pool = pool.clone();
+            tokio::spawn(tokio::time::timeout(Duration::from_millis(1), async move {
+                let _ = pool.acquire().await;
+            }))
+        };
+        tokio::time::sleep(Duration::from_millis(1)).await;
+        let b = {
+            let pool = pool.clone();
+            tokio::spawn(tokio::time::timeout(Duration::from_millis(2), async move {
+                let _ = pool.acquire().await;
+            }))
+        };
+        tokio::time::sleep(Duration::from_millis(1)).await;
+        // The first task should now be timed out.
+        drop(obj);
+        // The first task should have timed out and returned an error
+        // while the second task should've gotten hold of the object.
+        assert!(a.await.unwrap().is_err());
+        assert!(b.await.unwrap().is_ok());
+    }
+}

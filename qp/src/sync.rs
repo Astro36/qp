@@ -3,7 +3,7 @@ use crossbeam_queue::SegQueue;
 use crossbeam_utils::Backoff;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::task::{Context, Poll, Waker};
 
 /// Counting semaphore performing asynchronous permit acquisition.
@@ -131,6 +131,7 @@ impl<'a> SemaphorePermit<'a> {
 
 struct Acquire<'a> {
     semaphore: &'a Semaphore,
+    waiting: AtomicBool,
 }
 
 impl<'a> Future for Acquire<'a> {
@@ -140,7 +141,10 @@ impl<'a> Future for Acquire<'a> {
         match self.semaphore.try_acquire() {
             Some(permit) => Poll::Ready(permit),
             None => {
-                self.semaphore.waiters.push(cx.waker().clone());
+                if !self.waiting.load(Ordering::SeqCst) {
+                    self.waiting.store(true, Ordering::SeqCst);
+                    self.semaphore.waiters.push(cx.waker().clone());
+                }
                 Poll::Pending
             }
         }
@@ -149,6 +153,46 @@ impl<'a> Future for Acquire<'a> {
 
 impl<'a> Acquire<'a> {
     const fn new(semaphore: &'a Semaphore) -> Self {
-        Self { semaphore }
+        Self {
+            semaphore,
+            waiting: AtomicBool::new(false),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Arc;
+    use std::time::Duration;
+
+    #[tokio::test]
+    async fn test_abort_acquire() {
+        let sem = Arc::new(Semaphore::new(1));
+        //assert_eq!(sem.waiting_count(), 0);
+        // Grab the only permit for the semaphore
+        let permit = sem.try_acquire().unwrap();
+        // Spawn two tokio tasks waiting for the semaphore to become
+        // available. The first one times out after 1ms and the second
+        // after 3ms.
+        let a = {
+            let sem = sem.clone();
+            tokio::spawn(tokio::time::timeout(Duration::from_millis(1), async move {
+                sem.acquire().await;
+            }))
+        };
+        tokio::time::sleep(Duration::from_millis(1)).await;
+        let b = {
+            let sem = sem.clone();
+            tokio::spawn(tokio::time::timeout(Duration::from_millis(2), async move {
+                let _ = sem.acquire().await;
+            }))
+        };
+        tokio::time::sleep(Duration::from_millis(1)).await;
+        // The first task should now be timed out.
+        drop(permit);
+        assert!(a.await.unwrap().is_err());
+        assert!(b.await.unwrap().is_ok());
+        assert_eq!(sem.waiters.len(), 0);
     }
 }
