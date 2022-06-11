@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - '.github/workflows/ci.yml'
+      - 'examples/*/src/**'
+      - 'examples/*/Cargo.toml'
       - 'qp/src/**'
       - 'qp/tests/**'
       - 'qp/Cargo.toml'
@@ -17,6 +19,8 @@ on:
       - main
     paths:
       - '.github/workflows/ci.yml'
+      - 'examples/*/src/**'
+      - 'examples/*/Cargo.toml'
       - 'qp/src/**'
       - 'qp/tests/**'
       - 'qp/Cargo.toml'
