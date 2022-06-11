@@ -1,7 +1,7 @@
-use axum::extract::{Extension, Query};
+use axum::extract::Query;
 use axum::http::StatusCode;
 use axum::routing::get;
-use axum::{AddExtensionLayer, Router, Server};
+use axum::{Extension, Router, Server};
 use qp_postgres::tokio_postgres::NoTls;
 use qp_postgres::PgPool;
 use serde::Deserialize;
@@ -43,7 +43,7 @@ async fn main() {
     let pool = qp_postgres::connect(config, NoTls, 8);
     let app = Router::new()
         .route("/", get(add_number))
-        .layer(AddExtensionLayer::new(pool));
+        .layer(Extension(pool));
     let addr = SERVER_ADDRESS.parse().unwrap();
     Server::bind(&addr)
         .serve(app.into_make_service())
