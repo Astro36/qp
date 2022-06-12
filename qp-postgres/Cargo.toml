@@ -1,6 +1,6 @@
 [package]
 name = "qp-postgres"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Seungjae Park <astro.psj@gmail.com>"]
 edition = "2021"
 rust-version = "1.56"
@@ -11,7 +11,7 @@ keywords = ["async", "database", "pool", "tokio", "postgres"]
 categories = ["asynchronous", "database", "data-structures"]
 
 [dependencies]
-qp = { path = "../qp", version = "0.2.0" }
+qp = { path = "../qp", version = "0.2.1" }
 tokio = { version = "1.19.2", features = ["rt"] }
 tokio-postgres = "0.7.6"
 

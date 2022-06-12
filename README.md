@@ -9,7 +9,7 @@
 [![GitHub Workflow](https://img.shields.io/github/workflow/status/Astro36/qp/CI?style=for-the-badge)](https://github.com/Astro36/qp/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/gh/Astro36/qp?style=for-the-badge)](https://codecov.io/gh/Astro36/qp)
 [![Crates.io](https://img.shields.io/crates/d/qp?style=for-the-badge)](https://crates.io/crates/qp)
-[![License](https://img.shields.io/crates/l/qp?style=for-the-badge)](./LICENSE) 
+[![License](https://img.shields.io/crates/l/qp?style=for-the-badge)](./LICENSE)
 
 ## Usage
 
