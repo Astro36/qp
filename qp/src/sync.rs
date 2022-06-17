@@ -1,15 +1,13 @@
 //! Synchronization primitives for use in asynchronous contexts.
-use crossbeam_queue::SegQueue;
 use crossbeam_utils::Backoff;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::task::{Context, Poll, Waker};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::task::{Context, Poll};
 
 /// Counting semaphore performing asynchronous permit acquisition.
 pub struct Semaphore {
     permits: AtomicUsize,
-    waiters: SegQueue<Waker>,
 }
 
 impl Semaphore {
@@ -25,7 +23,6 @@ impl Semaphore {
         debug_assert!(permits >= 1);
         Self {
             permits: AtomicUsize::new(permits),
-            waiters: SegQueue::new(),
         }
     }
 
@@ -117,9 +114,6 @@ pub struct SemaphorePermit<'a> {
 impl Drop for SemaphorePermit<'_> {
     fn drop(&mut self) {
         self.semaphore.permits.fetch_add(1, Ordering::Release);
-        if let Some(waker) = self.semaphore.waiters.pop() {
-            waker.wake();
-        }
     }
 }
 
@@ -131,7 +125,6 @@ impl<'a> SemaphorePermit<'a> {
 
 struct Acquire<'a> {
     semaphore: &'a Semaphore,
-    waiting: AtomicBool,
 }
 
 impl<'a> Future for Acquire<'a> {
@@ -141,13 +134,7 @@ impl<'a> Future for Acquire<'a> {
         match self.semaphore.try_acquire() {
             Some(permit) => Poll::Ready(permit),
             None => {
-                if self
-                    .waiting
-                    .compare_exchange(false, true, Ordering::SeqCst, Ordering::Relaxed)
-                    .is_ok()
-                {
-                    self.semaphore.waiters.push(cx.waker().clone());
-                }
+                cx.waker().wake_by_ref();
                 Poll::Pending
             }
         }
@@ -156,10 +143,7 @@ impl<'a> Future for Acquire<'a> {
 
 impl<'a> Acquire<'a> {
     const fn new(semaphore: &'a Semaphore) -> Self {
-        Self {
-            semaphore,
-            waiting: AtomicBool::new(false),
-        }
+        Self { semaphore }
     }
 }
 
@@ -200,8 +184,5 @@ mod tests {
         // The first task should now be timed out.
         assert!(a.await.unwrap().is_err());
         assert!(b.await.unwrap().is_ok());
-
-        // Show memory leak.
-        assert!(sem.waiters.is_empty());
     }
 }
